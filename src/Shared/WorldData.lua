@@ -32,8 +32,14 @@ WorldData.CenterEmeraldGenerators = {
 }
 
 WorldData.SpectatorDeck = {
-    Position = Vector3.new(0, 44, 0),
-    Size = Vector3.new(52, 2, 52),
+    Position = Vector3.new(0, 26, 0),
+    Size = Vector3.new(42, 2, 42),
+}
+
+WorldData.Lobby = {
+    Position = Vector3.new(0, 0, 318),
+    WalkwayPosition = Vector3.new(0, 1, 224),
+    ViewDeckPosition = Vector3.new(0, 3, 145),
 }
 
 return WorldData

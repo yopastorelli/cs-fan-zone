@@ -14,6 +14,7 @@ TestService:Check(#Config.Teams == 6, "exactly six teams configured", script, 1)
 TestService:Check(#WorldData.MidIslands == 6, "exactly six mid islands configured", script, 2)
 TestService:Check(#Config.TeamUpgrades.Items >= 3, "at least three upgrades configured", script, 3)
 TestService:Check(#Config.Shop.Items >= 4, "at least four shop items configured", script, 4)
+TestService:Check(Config.Match.JoinMidMatchPolicy == "LobbyUntilNextRound", "late join policy locked", script, 5)
 
 local seenTeams = {}
 local totalMembers = 0
@@ -25,6 +26,7 @@ for index, team in ipairs(Config.Teams) do
     seenTeams[team.Id] = true
     totalMembers += #team.Members
     TestService:Check(Config.Biomes[team.BiomeId] ~= nil, "biome id mapped " .. tostring(index), script, 50 + index)
+    TestService:Check(typeof(team.BasePosition) == "Vector3", "team base position configured " .. tostring(index), script, 60 + index)
 end
 
 TestService:Check(totalMembers == 12, "twelve roster slots configured", script, 70)
@@ -41,8 +43,17 @@ local seenUpgrades = {}
 for index, item in ipairs(Config.TeamUpgrades.Items) do
     TestService:Check(seenUpgrades[item.Id] ~= true, "upgrade unique " .. tostring(index), script, 120 + index)
     TestService:Check(#item.TierCosts == #item.EffectValues, "upgrade tiers aligned " .. tostring(index), script, 130 + index)
+    TestService:Check(type(item.ResourceType) == "string" and item.ResourceType ~= "", "upgrade resource defined " .. tostring(index), script, 140 + index)
     seenUpgrades[item.Id] = true
 end
 
 TestService:Check(typeof(WorldData.CenterIsland.Position) == "Vector3", "center island configured", script, 150)
 TestService:Check(typeof(WorldData.SpectatorDeck.Position) == "Vector3", "spectator deck configured", script, 151)
+TestService:Check(typeof(WorldData.Lobby.Position) == "Vector3", "lobby configured", script, 152)
+TestService:Check(typeof(Config.World.Lobby.SpawnPosition) == "Vector3", "lobby spawn configured", script, 153)
+TestService:Check(type(Config.UI.Onboarding.Objectives) == "table" and #Config.UI.Onboarding.Objectives == 4, "four onboarding objectives configured", script, 154)
+TestService:Check(type(Config.UI.HelpMessagesByState.Waiting) == "string", "waiting help message configured", script, 155)
+TestService:Check(type(Config.UI.HelpMessagesByState.Spectating) == "string", "spectating help message configured", script, 156)
+TestService:Check(type(Config.UI.Results.DrawText) == "string", "draw ui text configured", script, 157)
+TestService:Check(type(Config.Interaction.ShopDistance) == "number" and Config.Interaction.ShopDistance > 0, "shop distance configured", script, 158)
+TestService:Check(type(Config.Interaction.UpgradeDistance) == "number" and Config.Interaction.UpgradeDistance > 0, "upgrade distance configured", script, 159)

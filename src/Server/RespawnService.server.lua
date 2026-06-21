@@ -17,6 +17,7 @@ local function onHumanoidDied(player, humanoid)
     end
 
     ArenaState.MarkPlayerDead(player)
+    ArenaState.ClearPlayerLoadout(player)
     local attackerUserId = humanoid:GetAttribute("LastAttackerUserId")
     local attackAt = humanoid:GetAttribute("LastAttackAt") or 0
     if attackerUserId and (os.clock() - attackAt) <= Config.Combat.KillCreditWindowSeconds then
@@ -29,7 +30,7 @@ local function onHumanoidDied(player, humanoid)
             Spectating = false,
         })
         task.delay(Config.Match.RespawnSeconds, function()
-            if player.Parent then
+            if player.Parent and playerState.TeamId and ArenaState.IsCoreAlive(playerState.TeamId) then
                 player:LoadCharacter()
             end
         end)
@@ -62,10 +63,17 @@ local function setupCharacter(player, character)
             ArenaState.TeleportPlayerToSpectator(player)
         end)
         rootPart.CanCollide = true
+    elseif playerState.InLobby then
+        task.defer(function()
+            ArenaState.TeleportPlayerToLobby(player)
+            ArenaState.BroadcastMatchState()
+            ArenaState.BroadcastTeamState(player)
+        end)
     elseif playerState.InMatch then
         task.defer(function()
             ArenaState.TeleportPlayerToBase(player)
             ArenaState.MarkPlayerAlive(player)
+            ArenaState.BroadcastMatchState()
         end)
     end
 end

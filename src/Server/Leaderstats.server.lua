@@ -35,6 +35,7 @@ local function onPlayerAdded(player)
     player:SetAttribute("CoreAlive", false)
     player:SetAttribute("Eliminated", false)
     player:SetAttribute("InMatch", false)
+    player:SetAttribute("PlayerPhase", "Lobby")
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)

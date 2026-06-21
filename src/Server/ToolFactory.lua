@@ -37,7 +37,7 @@ local function findEnemyHumanoid(player, rootPart, range, dotThreshold)
     local nearestDistance = range + 1
 
     for _, otherPlayer in ipairs(Players:GetPlayers()) do
-        if otherPlayer ~= player and ArenaState.IsEnemy(player, otherPlayer) then
+        if otherPlayer ~= player and ArenaState.IsEnemy(player, otherPlayer) and ArenaState.IsPlayerInMatch(otherPlayer) then
             local otherCharacter = otherPlayer.Character
             local otherRoot = otherCharacter and otherCharacter:FindFirstChild("HumanoidRootPart")
             local otherHumanoid = otherCharacter and otherCharacter:FindFirstChildOfClass("Humanoid")
@@ -74,6 +74,10 @@ local function createHandle(color)
     return handle
 end
 
+local function canUseMatchTool(player, humanoid)
+    return player and humanoid and humanoid.Health > 0 and ArenaState.IsPlayerInMatch(player)
+end
+
 function ToolFactory.CreateSwordTool(teamId, itemConfig)
     local tool = Instance.new("Tool")
     tool.Name = itemConfig.DisplayName
@@ -93,17 +97,23 @@ function ToolFactory.CreateSwordTool(teamId, itemConfig)
 
         local player = getPlayerFromTool(tool)
         local _, humanoid, rootPart = getCharacterRoot(tool)
-        if not player or not humanoid or humanoid.Health <= 0 then
+        if not canUseMatchTool(player, humanoid) then
             return
         end
 
         swinging = true
         local enemyHumanoid = findEnemyHumanoid(player, rootPart, Config.Combat.SwordHitRange, Config.Combat.SwordHitAngleDot)
         if enemyHumanoid then
+            local enemyPlayer = Players:GetPlayerFromCharacter(enemyHumanoid.Parent)
             local damage = Config.Combat.SwordBaseDamage + (tool:GetAttribute("DamageBonus") or 0)
             local teamLevel = ArenaState.GetUpgradeLevel(teamId, "sharpness")
-            if teamLevel > 0 then
+            if teamLevel > 0 and Config.TeamUpgrades.Items[1].EffectValues[teamLevel] then
                 damage += Config.TeamUpgrades.Items[1].EffectValues[teamLevel]
+            end
+            if enemyPlayer then
+                local enemyState = ArenaState.GetPlayerState(enemyPlayer)
+                local reduction = enemyState.TeamId and ArenaState.GetDamageReduction(enemyState.TeamId) or 0
+                damage = math.max(1, math.floor(damage * (1 - reduction)))
             end
             markKillCredit(enemyHumanoid, player)
             enemyHumanoid:TakeDamage(damage)
@@ -136,7 +146,7 @@ function ToolFactory.CreatePickaxeTool(teamId, itemConfig)
 
         local player = getPlayerFromTool(tool)
         local _, humanoid, rootPart = getCharacterRoot(tool)
-        if not player or not humanoid or humanoid.Health <= 0 then
+        if not canUseMatchTool(player, humanoid) then
             return
         end
 
@@ -145,11 +155,11 @@ function ToolFactory.CreatePickaxeTool(teamId, itemConfig)
         local targetTeamId = nil
         local targetCore = nil
 
-        for teamId, corePart in pairs(ArenaState.CoreInstances) do
-            if teamId ~= playerState.TeamId and corePart.Parent then
+        for otherTeamId, corePart in pairs(ArenaState.CoreInstances) do
+            if otherTeamId ~= playerState.TeamId and corePart.Parent then
                 local offset = corePart.Position - rootPart.Position
                 if offset.Magnitude <= Config.Combat.PickaxeHitRange and rootPart.CFrame.LookVector:Dot(offset.Unit) >= 0.15 then
-                    targetTeamId = teamId
+                    targetTeamId = otherTeamId
                     targetCore = corePart
                     break
                 end
@@ -161,6 +171,8 @@ function ToolFactory.CreatePickaxeTool(teamId, itemConfig)
             if remainingHealth <= 0 then
                 ArenaState.RecordCoreBreak(player)
                 ArenaState.PushAnnouncement(string.format("%s destruiu o nucleo da %s", player.Name, ArenaState.Teams[targetTeamId].DisplayName), "Danger")
+            else
+                ArenaState.PushAnnouncement(string.format("%s acertou um nucleo inimigo", player.Name), "Warning")
             end
         else
             local bounds = Workspace:GetPartBoundsInBox(rootPart.CFrame + (rootPart.CFrame.LookVector * 6), Vector3.new(6, 6, 6))
@@ -198,8 +210,9 @@ function ToolFactory.CreateHealTool(teamId, itemConfig)
             return
         end
 
+        local player = getPlayerFromTool(tool)
         local _, humanoid = getCharacterRoot(tool)
-        if not humanoid or humanoid.Health <= 0 then
+        if not canUseMatchTool(player, humanoid) then
             return
         end
 
@@ -230,8 +243,9 @@ function ToolFactory.CreateBlockTool(teamId, itemConfig)
             return
         end
 
+        local player = getPlayerFromTool(tool)
         local _, humanoid, rootPart = getCharacterRoot(tool)
-        if not humanoid or humanoid.Health <= 0 then
+        if not canUseMatchTool(player, humanoid) then
             return
         end
 
@@ -249,6 +263,11 @@ function ToolFactory.CreateBlockTool(teamId, itemConfig)
             math.floor((targetPosition.Y / grid) + 0.5) * grid,
             math.floor((targetPosition.Z / grid) + 0.5) * grid
         )
+
+        if ArenaState.IsRestrictedPlacementPosition(player, snapped) then
+            placing = false
+            return
+        end
 
         local occupancy = Workspace:GetPartBoundsInBox(CFrame.new(snapped), Vector3.new(3.6, 3.6, 3.6))
         for _, part in ipairs(occupancy) do
@@ -285,8 +304,8 @@ end
 
 function ToolFactory.GrantItem(player, itemConfig)
     local state = ArenaState.GetPlayerState(player)
-    if not state.TeamId then
-        return false, "Jogador sem time"
+    if not state.TeamId or not ArenaState.IsPlayerInMatch(player) then
+        return false, "Jogador fora da partida"
     end
 
     local backpack = player:FindFirstChild("Backpack")

@@ -112,6 +112,21 @@ local Config = {
         MaxCoreHealth = 6,
         CoreDamagePerHit = 1,
         SpectatorHeight = 46,
+        JoinMidMatchPolicy = "LobbyUntilNextRound",
+    },
+
+    World = {
+        Lobby = {
+            SpawnPosition = Vector3.new(0, 4, 318),
+            PlatformSize = Vector3.new(150, 4, 120),
+            WalkwaySize = Vector3.new(34, 2, 124),
+            ViewDeckSize = Vector3.new(52, 2, 32),
+            SafeZoneHalfExtents = Vector3.new(76, 18, 62),
+        },
+        Spectator = {
+            DeckPosition = Vector3.new(0, 26, 0),
+            DeckSize = Vector3.new(42, 2, 42),
+        },
     },
 
     Generators = {
@@ -158,6 +173,12 @@ local Config = {
             0.82,
             0.66,
         },
+        PickupCollectionDistance = 10,
+    },
+
+    Interaction = {
+        ShopDistance = 18,
+        UpgradeDistance = 18,
     },
 
     Shop = {
@@ -240,6 +261,8 @@ local Config = {
         BlockGrid = 4,
         BlockHealth = 1,
         KillCreditWindowSeconds = 8,
+        SpawnProtectionSeconds = 1,
+        RestrictedPlacementRadius = 9,
     },
 
     UI = {
@@ -256,6 +279,30 @@ local Config = {
             Iron = "Ferro",
             Gold = "Ouro",
             Emerald = "Esmeralda",
+        },
+        Onboarding = {
+            Title = "Como vencer",
+            Objectives = {
+                "Proteja seu nucleo",
+                "Colete ferro, ouro e esmeralda",
+                "Compre blocos e equipamentos",
+                "Destrua o nucleo inimigo para eliminar a dupla",
+            },
+            StartingText = "Voce vai para uma dupla automaticamente.",
+        },
+        Results = {
+            VictoryPrefix = "Vitoria:",
+            DrawText = "Empate: nenhuma dupla sobreviveu.",
+            ReturnText = "Retorno ao lobby em instantes.",
+        },
+        HelpMessagesByState = {
+            Lobby = "Explore o lobby e aguarde mais jogadores",
+            Waiting = "Explore o lobby e aguarde mais jogadores",
+            Starting = "Partida iniciando, prepare-se",
+            Active = "Defenda sua base e avance pelo centro",
+            SuddenDeath = "Todos os nucleos caem: sobreviva ate o fim",
+            Spectating = "Voce foi eliminado; acompanhe a rodada",
+            Ended = "Rodada encerrada; voce volta ao lobby em instantes",
         },
         Theme = {
             BackgroundColor = Color3.fromRGB(13, 17, 24),

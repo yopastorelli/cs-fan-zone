@@ -23,7 +23,14 @@ remotes.UpgradeRequested.OnServerEvent:Connect(function(player, payload)
     end
 
     local playerState = ArenaState.GetPlayerState(player)
-    if not playerState.TeamId then
+    if not playerState.TeamId or not ArenaState.IsPlayerInMatch(player) then
+        return
+    end
+
+    local shopPart = ArenaState.GetShopPart(player, "Upgrades")
+    local ok, reason = ArenaState.CanUseShop(player, shopPart)
+    if not ok then
+        ArenaState.PushAnnouncement(reason or "Upgrade recusado", "Warning")
         return
     end
 

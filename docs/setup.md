@@ -11,4 +11,5 @@ HEALTHCHECK: curl -fsS http://127.0.0.1:34872/ >/dev/null && echo OK
 2. Garantir permissao de script injection para Rojo.
 3. Conectar em localhost:34872.
 4. Rodar Play.
-5. Validar tests/manual-smoke.md.
+5. Confirmar spawn no lobby terrestre e HUD de onboarding.
+6. Validar tests/manual-smoke.md.

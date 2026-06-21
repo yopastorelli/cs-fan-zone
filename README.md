@@ -12,7 +12,8 @@ STUDIO_CONNECT: Rojo plugin -> localhost:34872
 MODE: arena competitiva 6x2
 TEAMS: Planicie, Deserto, Taiga, Selva, Neve, Cogumelos
 OBJECTIVE: destruir o nucleo das outras duplas e ser a ultima dupla viva
-FEATURES: geradores, loja, upgrades, blocos, espada, picareta, respawn e eliminacao final
+PLAYER_PHASES: Lobby, InMatch, Spectating
+FEATURES: onboarding no lobby, geradores, loja, upgrades, blocos, espada, picareta, respawn, eliminacao final e empate
 
 ## SAFETY
 LICENSED_REAL_NAMES: true

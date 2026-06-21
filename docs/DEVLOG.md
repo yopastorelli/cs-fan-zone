@@ -6,4 +6,5 @@
 - Added six biome bases in Portuguese: Planicie, Deserto, Taiga, Selva, Neve, Cogumelos.
 - Added server-authoritative match flow, team assignment, generators, item shop, upgrades, cores, respawn, elimination, and victory resolution.
 - Added procedural BedWars-like combat tools for sword, pickaxe, healing, and wool block placement.
+- Added lobby-first onboarding, late-join lobby policy, spectator-only post-elimination flow, and alpha hardening for shop, upgrade, block placement, and draw resolution.
 - Preserved compliance gates for original, non-branded content only.

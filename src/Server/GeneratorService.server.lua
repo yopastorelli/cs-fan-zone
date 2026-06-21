@@ -1,4 +1,5 @@
 local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -40,8 +41,11 @@ local function createPickup(generatorPart, generatorTypeName)
 
     pickup.Touched:Connect(function(hit)
         local character = hit and hit.Parent
-        local player = character and game:GetService("Players"):GetPlayerFromCharacter(character)
+        local player = character and Players:GetPlayerFromCharacter(character)
         if not player then
+            return
+        end
+        if not ArenaState.CanCollectResources(player) then
             return
         end
 
@@ -52,8 +56,10 @@ local function createPickup(generatorPart, generatorTypeName)
         collectedDebounce[key] = true
 
         if pickup.Parent then
-            ArenaState.AddResource(player, pickup:GetAttribute("ResourceType"), pickup:GetAttribute("Amount"))
-            pickup:Destroy()
+            local added = ArenaState.AddResource(player, pickup:GetAttribute("ResourceType"), pickup:GetAttribute("Amount"))
+            if added then
+                pickup:Destroy()
+            end
         end
 
         task.delay(0.25, function()

@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeamsService = game:GetService("Teams")
+local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
@@ -11,6 +12,8 @@ local remotes = Remotes.GetAll()
 local ArenaState = {
     MatchState = "Waiting",
     StateEndsAt = 0,
+    MatchEndReason = "Reset",
+    WinningTeamId = nil,
     Players = {},
     Teams = {},
     TeamObjects = {},
@@ -32,6 +35,16 @@ local function shallowCopyArray(values)
     return copied
 end
 
+local function getWorld()
+    return Workspace:FindFirstChild("CSFanZone")
+end
+
+local function getLobbySpawn()
+    local world = getWorld()
+    local lobby = world and world:FindFirstChild("Lobby")
+    return lobby and lobby:FindFirstChild("LobbySpawn")
+end
+
 local function ensurePlayerState(player)
     local state = ArenaState.Players[player]
     if state then
@@ -46,8 +59,10 @@ local function ensurePlayerState(player)
             Emerald = 0,
         },
         Eliminated = false,
-        Spectating = true,
+        Spectating = false,
         InMatch = false,
+        InLobby = true,
+        LastLoadoutResetAt = 0,
     }
     ArenaState.Players[player] = state
     return state
@@ -64,6 +79,17 @@ local function findTeamConfig(teamId)
         end
     end
     return nil
+end
+
+local function getHelpText(player)
+    local phase = ArenaState.GetPlayerPhase(player)
+    if phase == "Lobby" then
+        return Config.UI.HelpMessagesByState[ArenaState.MatchState] or Config.UI.HelpMessagesByState.Lobby
+    end
+    if phase == "Spectating" then
+        return Config.UI.HelpMessagesByState.Spectating
+    end
+    return Config.UI.HelpMessagesByState[ArenaState.MatchState] or ""
 end
 
 function ArenaState.Initialize()
@@ -97,8 +123,33 @@ function ArenaState.Initialize()
     end
 end
 
+function ArenaState.GetPlayerPhase(player)
+    local state = ensurePlayerState(player)
+    if state.Spectating then
+        return "Spectating"
+    end
+    if state.InMatch then
+        return "InMatch"
+    end
+    return "Lobby"
+end
+
+function ArenaState.IsPlayerInLobby(player)
+    return ArenaState.GetPlayerPhase(player) == "Lobby"
+end
+
+function ArenaState.IsPlayerInMatch(player)
+    return ArenaState.GetPlayerPhase(player) == "InMatch"
+end
+
+function ArenaState.IsPlayerSpectating(player)
+    return ArenaState.GetPlayerPhase(player) == "Spectating"
+end
+
 function ArenaState.ResetRoundState()
     ArenaState.MatchPlayers = {}
+    ArenaState.WinningTeamId = nil
+    ArenaState.MatchEndReason = "Reset"
 
     for _, teamConfig in ipairs(Config.Teams) do
         local team = getTeamById(teamConfig.Id)
@@ -117,36 +168,40 @@ function ArenaState.ResetRoundState()
         state.Resources.Gold = 0
         state.Resources.Emerald = 0
         state.Eliminated = false
-        state.Spectating = true
+        state.Spectating = false
         state.InMatch = false
+        state.InLobby = true
         if player.Parent then
             player.Team = nil
             player:SetAttribute("TeamId", "")
             player:SetAttribute("CoreAlive", false)
             player:SetAttribute("Eliminated", false)
             player:SetAttribute("InMatch", false)
+            player:SetAttribute("PlayerPhase", "Lobby")
         end
     end
 end
 
-function ArenaState.SetMatchState(nextState, seconds)
+function ArenaState.SetMatchState(nextState, seconds, extra)
     ArenaState.MatchState = nextState
     ArenaState.StateEndsAt = getNow() + (seconds or 0)
+    ArenaState.MatchEndReason = extra and extra.EndReason or ArenaState.MatchEndReason
+    ArenaState.WinningTeamId = extra and extra.WinningTeamId or ArenaState.WinningTeamId
     ArenaState.BroadcastMatchState()
 end
 
-function ArenaState.BroadcastMatchState()
-    remotes.MatchStateUpdated:FireAllClients({
-        MatchState = ArenaState.MatchState,
-        StateEndsAt = ArenaState.StateEndsAt,
-        QueueCount = ArenaState.GetEligiblePlayerCount(),
-    })
+function ArenaState.SetMatchResult(endReason, winningTeamId)
+    ArenaState.MatchEndReason = endReason or "Reset"
+    ArenaState.WinningTeamId = winningTeamId
 end
 
 function ArenaState.GetEligiblePlayers()
     local players = {}
     for _, player in ipairs(Players:GetPlayers()) do
-        players[#players + 1] = player
+        local state = ensurePlayerState(player)
+        if not state.InMatch and not state.Spectating then
+            players[#players + 1] = player
+        end
     end
     table.sort(players, function(left, right)
         return left.UserId < right.UserId
@@ -156,38 +211,6 @@ end
 
 function ArenaState.GetEligiblePlayerCount()
     return #ArenaState.GetEligiblePlayers()
-end
-
-function ArenaState.AssignPlayersToTeams(players)
-    ArenaState.MatchPlayers = shallowCopyArray(players)
-
-    for index, player in ipairs(players) do
-        local teamConfig = Config.Teams[((index - 1) % #Config.Teams) + 1]
-        local team = getTeamById(teamConfig.Id)
-        local playerState = ensurePlayerState(player)
-
-        playerState.TeamId = teamConfig.Id
-        playerState.Resources.Iron = 0
-        playerState.Resources.Gold = 0
-        playerState.Resources.Emerald = 0
-        playerState.Eliminated = false
-        playerState.Spectating = false
-        playerState.InMatch = true
-
-        team.Members[#team.Members + 1] = player
-        team.AlivePlayers += 1
-
-        player.Team = ArenaState.TeamObjects[teamConfig.Id]
-        player:SetAttribute("TeamId", teamConfig.Id)
-        player:SetAttribute("CoreAlive", true)
-        player:SetAttribute("Eliminated", false)
-        player:SetAttribute("InMatch", true)
-    end
-
-    ArenaState.BroadcastAllTeamState()
-    for _, player in ipairs(players) do
-        ArenaState.BroadcastInventory(player)
-    end
 end
 
 function ArenaState.GetPlayerState(player)
@@ -214,28 +237,6 @@ function ArenaState.GetTeamConfig(teamId)
     return findTeamConfig(teamId)
 end
 
-function ArenaState.AddResource(player, resourceType, amount)
-    local state = ensurePlayerState(player)
-    state.Resources[resourceType] = math.max(0, (state.Resources[resourceType] or 0) + amount)
-    ArenaState.BroadcastInventory(player)
-end
-
-function ArenaState.CanAfford(player, resourceType, cost)
-    local state = ensurePlayerState(player)
-    return (state.Resources[resourceType] or 0) >= cost
-end
-
-function ArenaState.SpendResource(player, resourceType, cost)
-    local state = ensurePlayerState(player)
-    if (state.Resources[resourceType] or 0) < cost then
-        return false
-    end
-
-    state.Resources[resourceType] -= cost
-    ArenaState.BroadcastInventory(player)
-    return true
-end
-
 function ArenaState.GetTeamStandings()
     local standings = {}
     for _, teamConfig in ipairs(Config.Teams) do
@@ -253,24 +254,50 @@ function ArenaState.GetTeamStandings()
     return standings
 end
 
+function ArenaState.GetWinningTeam()
+    return ArenaState.WinningTeamId and getTeamById(ArenaState.WinningTeamId) or nil
+end
+
+function ArenaState.BroadcastMatchState()
+    local queueCount = ArenaState.GetEligiblePlayerCount()
+    for _, player in ipairs(Players:GetPlayers()) do
+        remotes.MatchStateUpdated:FireClient(player, {
+            MatchState = ArenaState.MatchState,
+            StateEndsAt = ArenaState.StateEndsAt,
+            QueueCount = queueCount,
+            MinPlayersToStart = Config.Match.MinPlayersToStart,
+            PlayerPhase = ArenaState.GetPlayerPhase(player),
+            ObjectiveText = Config.UI.Onboarding.Objectives,
+            HelpText = getHelpText(player),
+            WinningTeamId = ArenaState.WinningTeamId,
+            EndReason = ArenaState.MatchEndReason,
+        })
+    end
+end
+
 function ArenaState.BroadcastTeamState(player)
     local payload = {
         MatchState = ArenaState.MatchState,
         OwnTeamId = nil,
-        Standings = ArenaState.GetTeamStandings(),
+        Standings = {},
     }
 
     if player then
         local team = ArenaState.GetPlayerTeam(player)
         local state = ensurePlayerState(player)
+        local phase = ArenaState.GetPlayerPhase(player)
         payload.OwnTeamId = state.TeamId
         payload.OwnCoreAlive = team and team.CoreAlive or false
         payload.OwnCoreHealth = team and team.CoreHealth or 0
+        payload.PlayerPhase = phase
         payload.OwnUpgrades = team and {
             sharpness = team.UpgradeLevels.sharpness,
             protection = team.UpgradeLevels.protection,
             forge = team.UpgradeLevels.forge,
         } or nil
+        if phase ~= "Lobby" then
+            payload.Standings = ArenaState.GetTeamStandings()
+        end
         remotes.TeamStateUpdated:FireClient(player, payload)
         return
     end
@@ -305,6 +332,66 @@ function ArenaState.PushAnnouncement(message, colorName)
     })
 end
 
+function ArenaState.AssignPlayersToTeams(players)
+    ArenaState.MatchPlayers = shallowCopyArray(players)
+
+    for index, player in ipairs(players) do
+        local teamConfig = Config.Teams[((index - 1) % #Config.Teams) + 1]
+        local team = getTeamById(teamConfig.Id)
+        local playerState = ensurePlayerState(player)
+
+        playerState.TeamId = teamConfig.Id
+        playerState.Resources.Iron = 0
+        playerState.Resources.Gold = 0
+        playerState.Resources.Emerald = 0
+        playerState.Eliminated = false
+        playerState.Spectating = false
+        playerState.InMatch = true
+        playerState.InLobby = false
+
+        team.Members[#team.Members + 1] = player
+        team.AlivePlayers += 1
+
+        player.Team = ArenaState.TeamObjects[teamConfig.Id]
+        player:SetAttribute("TeamId", teamConfig.Id)
+        player:SetAttribute("CoreAlive", true)
+        player:SetAttribute("Eliminated", false)
+        player:SetAttribute("InMatch", true)
+        player:SetAttribute("PlayerPhase", "InMatch")
+    end
+
+    ArenaState.BroadcastAllTeamState()
+    for _, player in ipairs(players) do
+        ArenaState.BroadcastInventory(player)
+    end
+end
+
+function ArenaState.AddResource(player, resourceType, amount)
+    if not ArenaState.CanCollectResources(player) then
+        return false
+    end
+    local state = ensurePlayerState(player)
+    state.Resources[resourceType] = math.max(0, (state.Resources[resourceType] or 0) + amount)
+    ArenaState.BroadcastInventory(player)
+    return true
+end
+
+function ArenaState.CanAfford(player, resourceType, cost)
+    local state = ensurePlayerState(player)
+    return (state.Resources[resourceType] or 0) >= cost
+end
+
+function ArenaState.SpendResource(player, resourceType, cost)
+    local state = ensurePlayerState(player)
+    if (state.Resources[resourceType] or 0) < cost then
+        return false
+    end
+
+    state.Resources[resourceType] -= cost
+    ArenaState.BroadcastInventory(player)
+    return true
+end
+
 function ArenaState.RegisterCore(teamId, corePart)
     ArenaState.CoreInstances[teamId] = corePart
 end
@@ -322,6 +409,19 @@ function ArenaState.GetForgeMultiplier(teamId)
     local team = getTeamById(teamId)
     local tier = math.clamp(team and team.UpgradeLevels.forge or 1, 1, #Config.Generators.ForgeIntervals)
     return Config.Generators.ForgeIntervals[tier]
+end
+
+function ArenaState.GetDamageReduction(teamId)
+    local team = getTeamById(teamId)
+    if not team then
+        return 0
+    end
+    local level = team.UpgradeLevels.protection or 0
+    local protectionConfig = Config.TeamUpgrades.Items[2]
+    if protectionConfig and protectionConfig.EffectValues[level] then
+        return protectionConfig.EffectValues[level]
+    end
+    return 0
 end
 
 function ArenaState.IsEnemy(player, otherPlayer)
@@ -348,6 +448,82 @@ function ArenaState.AdvanceUpgrade(teamId, upgradeId)
     return team.UpgradeLevels[upgradeId]
 end
 
+function ArenaState.CanCollectResources(player)
+    return ArenaState.IsPlayerInMatch(player)
+end
+
+function ArenaState.IsInsideLobbySafeZone(position)
+    local lobbyPosition = Config.World.Lobby.SpawnPosition
+    local extents = Config.World.Lobby.SafeZoneHalfExtents
+    return math.abs(position.X - lobbyPosition.X) <= extents.X
+        and math.abs(position.Y - lobbyPosition.Y) <= extents.Y
+        and math.abs(position.Z - lobbyPosition.Z) <= extents.Z
+end
+
+function ArenaState.IsInsideSpectatorZone(position)
+    local center = Config.World.Spectator.DeckPosition
+    local half = (Config.World.Spectator.DeckSize / 2) + Vector3.new(4, 10, 4)
+    return math.abs(position.X - center.X) <= half.X
+        and math.abs(position.Y - center.Y) <= half.Y
+        and math.abs(position.Z - center.Z) <= half.Z
+end
+
+function ArenaState.IsRestrictedPlacementPosition(player, snappedPosition)
+    if ArenaState.IsInsideLobbySafeZone(snappedPosition) or ArenaState.IsInsideSpectatorZone(snappedPosition) then
+        return true
+    end
+
+    local teamConfig = ArenaState.GetPlayerTeamConfig(player)
+    local restrictedRadius = Config.Combat.RestrictedPlacementRadius
+    for _, shopByKind in pairs(ArenaState.ShopInstances) do
+        for _, shopPart in pairs(shopByKind) do
+            if shopPart and shopPart.Parent and (shopPart.Position - snappedPosition).Magnitude <= restrictedRadius then
+                return true
+            end
+        end
+    end
+
+    for _, corePart in pairs(ArenaState.CoreInstances) do
+        if corePart and corePart.Parent and (corePart.Position - snappedPosition).Magnitude <= restrictedRadius then
+            return true
+        end
+    end
+
+    if teamConfig and (teamConfig.BasePosition + Vector3.new(0, 0, 18) - snappedPosition).Magnitude <= restrictedRadius then
+        return true
+    end
+
+    return false
+end
+
+function ArenaState.CanUseShop(player, shopPart)
+    if not player or not shopPart or not shopPart:IsA("BasePart") then
+        return false, "Loja invalida"
+    end
+    if not ArenaState.IsPlayerInMatch(player) then
+        return false, "Voce precisa estar em partida"
+    end
+
+    local state = ensurePlayerState(player)
+    if state.TeamId ~= shopPart:GetAttribute("TeamId") then
+        return false, "Loja de outro time"
+    end
+
+    local character = player.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then
+        return false, "Personagem indisponivel"
+    end
+
+    local shopKind = shopPart:GetAttribute("ShopKind")
+    local maxDistance = shopKind == "Upgrades" and Config.Interaction.UpgradeDistance or Config.Interaction.ShopDistance
+    if (rootPart.Position - shopPart.Position).Magnitude > maxDistance then
+        return false, "Chegue mais perto da loja"
+    end
+
+    return true
+end
+
 function ArenaState.DamageCore(teamId, amount)
     local team = getTeamById(teamId)
     if not team or not team.CoreAlive then
@@ -358,18 +534,21 @@ function ArenaState.DamageCore(teamId, amount)
     local corePart = ArenaState.CoreInstances[teamId]
     if corePart then
         corePart:SetAttribute("CoreHealth", team.CoreHealth)
+        corePart.Color = team.CoreHealth > 0 and team.Color:Lerp(Color3.new(1, 1, 1), 0.25) or Color3.fromRGB(75, 75, 75)
+        local status = corePart:FindFirstChild("CoreStatus")
+        local label = status and status:FindFirstChild("Label")
+        if label and label:IsA("TextLabel") then
+            label.Text = team.CoreHealth > 0
+                and string.format("Nucleo %d/%d", team.CoreHealth, Config.Match.MaxCoreHealth)
+                or "Nucleo destruido"
+        end
     end
 
     if team.CoreHealth <= 0 then
         team.CoreAlive = false
-        if corePart then
-            corePart.Color = Color3.fromRGB(75, 75, 75)
-            local prompt = corePart:FindFirstChild("CoreStatus")
-            if prompt and prompt:IsA("BillboardGui") then
-                local label = prompt:FindFirstChild("Label")
-                if label and label:IsA("TextLabel") then
-                    label.Text = "Nucleo destruido"
-                end
+        for _, member in ipairs(team.Members) do
+            if member.Parent then
+                member:SetAttribute("CoreAlive", false)
             end
         end
     end
@@ -415,8 +594,11 @@ function ArenaState.EliminatePlayer(player)
     local state = ensurePlayerState(player)
     state.Eliminated = true
     state.Spectating = true
+    state.InLobby = false
     player:SetAttribute("Eliminated", true)
+    player:SetAttribute("PlayerPhase", "Spectating")
     ArenaState.BroadcastInventory(player)
+    ArenaState.BroadcastMatchState()
     ArenaState.BroadcastAllTeamState()
 end
 
@@ -500,12 +682,37 @@ function ArenaState.GetShopPart(player, kind)
     return shops and shops[kind] or nil
 end
 
+function ArenaState.ClearPlayerLoadout(player)
+    local backpack = player:FindFirstChild("Backpack")
+    if backpack then
+        backpack:ClearAllChildren()
+    end
+    local character = player.Character
+    if character then
+        for _, child in ipairs(character:GetChildren()) do
+            if child:IsA("Tool") then
+                child:Destroy()
+            end
+        end
+    end
+    local state = ensurePlayerState(player)
+    state.LastLoadoutResetAt = os.clock()
+end
+
 function ArenaState.TeleportPlayerToBase(player)
     local teamConfig = ArenaState.GetPlayerTeamConfig(player)
     if not teamConfig or not player.Character then
         return
     end
     player.Character:PivotTo(CFrame.new(teamConfig.BasePosition + Vector3.new(0, 5, 18)))
+end
+
+function ArenaState.TeleportPlayerToLobby(player)
+    local lobbySpawn = getLobbySpawn()
+    if not lobbySpawn or not player.Character then
+        return
+    end
+    player.Character:PivotTo(lobbySpawn.CFrame + Vector3.new(0, 4, 0))
 end
 
 function ArenaState.TeleportPlayerToSpectator(player)

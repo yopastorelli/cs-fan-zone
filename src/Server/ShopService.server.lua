@@ -28,13 +28,9 @@ end
 local function connectPrompt(prompt)
     prompt.Triggered:Connect(function(player)
         local shopPart = prompt.Parent
-        if not shopPart or not shopPart:IsA("BasePart") then
-            return
-        end
-
-        local playerState = ArenaState.GetPlayerState(player)
-        if playerState.TeamId ~= shopPart:GetAttribute("TeamId") then
-            ArenaState.PushAnnouncement(player.Name .. " tentou abrir uma loja de outro time", "Warning")
+        local ok, reason = ArenaState.CanUseShop(player, shopPart)
+        if not ok then
+            ArenaState.PushAnnouncement(reason or "Acesso negado a loja", "Warning")
             return
         end
 
@@ -49,6 +45,13 @@ remotes.PurchaseRequested.OnServerEvent:Connect(function(player, payload)
 
     local item = getItemById(payload.ItemId)
     if not item then
+        return
+    end
+
+    local shopPart = ArenaState.GetShopPart(player, "Items")
+    local ok, reason = ArenaState.CanUseShop(player, shopPart)
+    if not ok then
+        ArenaState.PushAnnouncement(reason or "Compra recusada", "Warning")
         return
     end
 

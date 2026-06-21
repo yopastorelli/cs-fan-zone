@@ -25,7 +25,7 @@ local function clearRoundDebris()
             local status = descendant:FindFirstChild("CoreStatus")
             local label = status and status:FindFirstChild("Label")
             if label and label:IsA("TextLabel") then
-                label.Text = "Nucleo 6/6"
+                label.Text = string.format("Nucleo %d/%d", Config.Match.MaxCoreHealth, Config.Match.MaxCoreHealth)
             end
         end
     end
@@ -33,18 +33,7 @@ end
 
 local function clearInventories()
     for _, player in ipairs(Players:GetPlayers()) do
-        local backpack = player:FindFirstChild("Backpack")
-        if backpack then
-            backpack:ClearAllChildren()
-        end
-        local character = player.Character
-        if character then
-            for _, child in ipairs(character:GetChildren()) do
-                if child:IsA("Tool") then
-                    child:Destroy()
-                end
-            end
-        end
+        ArenaState.ClearPlayerLoadout(player)
     end
 end
 
@@ -53,6 +42,7 @@ local function beginRound(players)
     clearInventories()
     ArenaState.ResetRoundState()
     ArenaState.AssignPlayersToTeams(players)
+    ArenaState.SetMatchResult("Reset", nil)
     ArenaState.SetMatchState("Active", Config.Match.SuddenDeathSeconds)
     ArenaState.PushAnnouncement("Rodada iniciada. Protejam o nucleo e avancem pelo centro.", "Accent")
 
@@ -69,8 +59,17 @@ local function beginRound(players)
         for teamId in pairs(ArenaState.Teams) do
             ArenaState.DamageCore(teamId, Config.Match.MaxCoreHealth)
         end
-        ArenaState.PushAnnouncement("Morte Subita. Todos os nucleos foram destruídos.", "Danger")
+        ArenaState.PushAnnouncement("Morte Subita. Todos os nucleos foram destruidos.", "Danger")
     end)
+end
+
+local function returnEveryoneToLobby()
+    ArenaState.ResetRoundState()
+    clearRoundDebris()
+    clearInventories()
+    for _, player in ipairs(Players:GetPlayers()) do
+        player:LoadCharacter()
+    end
 end
 
 local function matchLoop()
@@ -80,6 +79,7 @@ local function matchLoop()
         if ArenaState.MatchState == "Waiting" then
             local eligible = ArenaState.GetEligiblePlayers()
             if #eligible >= Config.Match.MinPlayersToStart then
+                ArenaState.SetMatchResult("Reset", nil)
                 ArenaState.SetMatchState("Starting", Config.Match.CountdownSeconds)
                 ArenaState.PushAnnouncement("Contagem iniciada para a proxima rodada.", "Warning")
             else
@@ -89,6 +89,7 @@ local function matchLoop()
             local eligible = ArenaState.GetEligiblePlayers()
             local secondsLeft = ArenaState.StateEndsAt - os.time()
             if #eligible < Config.Match.MinPlayersToStart then
+                ArenaState.SetMatchResult("Reset", nil)
                 ArenaState.SetMatchState("Waiting", 0)
                 ArenaState.PushAnnouncement("Contagem cancelada. Faltam jogadores.", "Warning")
             elseif secondsLeft <= 0 then
@@ -106,13 +107,9 @@ local function matchLoop()
         elseif ArenaState.MatchState == "Ended" then
             local secondsLeft = ArenaState.StateEndsAt - os.time()
             if secondsLeft <= 0 then
+                ArenaState.SetMatchResult("Reset", nil)
                 ArenaState.SetMatchState("Waiting", 0)
-                ArenaState.ResetRoundState()
-                clearRoundDebris()
-                clearInventories()
-                for _, player in ipairs(Players:GetPlayers()) do
-                    player:LoadCharacter()
-                end
+                returnEveryoneToLobby()
             else
                 ArenaState.BroadcastMatchState()
             end
@@ -123,5 +120,6 @@ local function matchLoop()
 end
 
 ArenaState.Initialize()
+ArenaState.SetMatchResult("Reset", nil)
 ArenaState.SetMatchState("Waiting", 0)
 task.spawn(matchLoop)
