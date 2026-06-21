@@ -1,26 +1,35 @@
-# Playtest Session Template
+# AI_PLAYTEST_SESSION_TEMPLATE
 
-## Session
+SESSION_DATE:
+TESTER_ID:
+DEVICE:
+INPUT_METHOD:
+BUILD_COMMIT:
+ROJO_BUILD_PASSED: unknown
+STUDIO_OUTPUT_RED_ERRORS: unknown
 
-- Date:
-- Tester:
-- Device:
-- Build/commit:
+## TIMED_METRICS
+OBJECTIVE_UNDERSTOOD_SECONDS:
+FIRST_COLLECTIBLE_SECONDS:
+FULL_LOOP_MINUTES:
 
-## Observations
+## BOOLEAN_CHECKS
+SPAWNED_IN_CENTRAL_PLAZA:
+HUD_READABLE:
+PROMPTS_READABLE:
+COLLECTED_12_UNIQUE_MEMORIES:
+ACTIVATED_3_UNIQUE_POIS:
+DUPLICATES_BLOCKED:
+FINAL_GATE_BLOCKED_BEFORE_COMPLETE:
+FINAL_GATE_TELEPORTS_AFTER_COMPLETE:
+FINAL_ROOM_SCREENSHOT_PAYOFF:
+NO_SOUND_ONLY_CRITICAL_INFO:
+NO_DIRECT_IP_OR_BRAND_CONFUSION:
+NO_OFF_PLATFORM_PROMPTS:
 
-- Did the player understand the objective in 30 seconds?
-- Did the player find the first collectible in 60 seconds?
-- Were the HUD and prompts readable?
-- Did any interaction depend only on sound?
-- Did the player activate 3 POIs?
-- Did the final celebration room unlock?
-- Were there Output errors?
-- Were any references too close to real people, brands, logos, voices, or copied media?
-
-## Notes
-
-- Bugs:
-- Confusing moments:
-- Favorite moment:
-- Next change:
+## NOTES
+BUGS:
+CONFUSING_MOMENTS:
+BEST_MOMENT:
+RISKY_REFERENCE:
+NEXT_CHANGE:

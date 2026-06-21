@@ -1,46 +1,33 @@
-# CS Fan Zone setup
+# AI_SETUP_SPEC
 
-Execute tudo a partir do WSL para evitar o problema de `dubious ownership` do Git no caminho `\\wsl$`.
+## ENVIRONMENT
+REQUIRED_SHELL: WSL bash
+WORKDIR: /home/danie/projetos/cs-fan-zone
+DO_NOT_USE_FOR_GIT: Git Windows over PowerShell UNC path
+ROKIT_CONFIG: rokit.toml
+ROJO_PROJECT: default.project.json
 
-## Bootstrap local
+## COMMANDS
+INSTALL_ROKIT_IF_MISSING: curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
+INSTALL_TOOLS: ~/.rokit/bin/rokit install
+INSTALL_PLUGIN: ~/.rokit/bin/rojo plugin install
+BUILD: ~/.rokit/bin/rojo build -o build.rbxlx
+SERVE: ~/.rokit/bin/rojo serve
+HEALTHCHECK: curl -fsS http://127.0.0.1:34872/ >/dev/null && echo OK
+GIT_STATUS: git status --short --branch
+PUSH_BRANCH: git push -u origin feat/bootstrap-world
 
-```bash
-cd /home/danie/projetos/cs-fan-zone
-curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
-source ~/.bashrc
-rokit install
-~/.rokit/bin/rojo plugin install
-~/.rokit/bin/rojo build -o build.rbxlx
-~/.rokit/bin/rojo serve
-```
+## STUDIO_MANUAL_STEPS
+1. Open Roblox Studio on Windows.
+2. Open the target private experience or a new place.
+3. Confirm Rojo plugin has script injection permission.
+4. Connect plugin to localhost:34872.
+5. Run Play.
+6. Validate tests/manual-smoke.md.
+7. Publish privately only after release checklist passes.
 
-Se `rojo` ainda nao estiver no `PATH`, use `~/.rokit/bin/rojo` explicitamente como acima.
-
-## Roblox Studio
-
-1. Abra o Roblox Studio.
-2. Confirme que o plugin do Rojo foi instalado.
-3. Abra a experiencia de destino ou crie uma nova.
-4. No plugin do Rojo, conecte ao servidor local `localhost:34872`.
-5. Rode `File -> Publish to Roblox`.
-6. Ajuste privacidade e permissoes no dashboard da experiencia.
-
-## Conteudo e compliance
-
-- Desenvolva primeiro em privado ou com playtesters conhecidos.
-- Mire maturidade `Minimal` ou `Mild`.
-- Use referencias indiretas e originais a comunidade.
-- Nao use marcas, nomes reais, logos, vozes ou imagens sem autorizacao.
-- Registre assets externos em `docs/asset-register.md`.
-- Coloque creditos obrigatorios em `docs/ATTRIBUTIONS.md`.
-
-## Fluxo Git/GitHub
-
-```bash
-cd /home/danie/projetos/cs-fan-zone
-git status
-git add .
-git commit -m "Bootstrap CS Fan Zone"
-git push -u origin feat/bootstrap-world
-gh pr create --fill --base main
-```
+## FAILURE_ROUTING
+ROJO_PLUGIN_CANNOT_CONNECT: verify ~/.rokit/bin/rojo serve is running and test http://127.0.0.1:34872/.
+SCRIPT_INJECTION_ERROR: enable Rojo plugin script injection permission in Studio Plugin Manager.
+BUILD_ERROR: inspect the reported Luau file and run build again after fix.
+STUDIO_RED_OUTPUT: capture exact error, script name, and reproduction step.

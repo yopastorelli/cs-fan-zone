@@ -27,7 +27,7 @@ screenGui.Parent = playerGui
 
 local root = Instance.new("Frame")
 root.Name = "Root"
-root.Size = UDim2.fromOffset(390, 196)
+root.Size = UDim2.fromOffset(390, 228)
 root.Position = UDim2.fromOffset(18, 18)
 root.BackgroundColor3 = theme.BackgroundColor
 root.BackgroundTransparency = 0.08
@@ -98,10 +98,22 @@ local poisCorner = Instance.new("UICorner")
 poisCorner.CornerRadius = UDim.new(0, 8)
 poisCorner.Parent = pois
 
+local status = Instance.new("TextLabel")
+status.Name = "Status"
+status.Size = UDim2.new(1, -24, 0, 24)
+status.Position = UDim2.fromOffset(12, 128)
+status.BackgroundTransparency = 1
+status.Font = Enum.Font.GothamBold
+status.Text = Config.UI.StatusLabel .. ": Explorando"
+status.TextColor3 = theme.WarningColor
+status.TextSize = 15
+status.TextXAlignment = Enum.TextXAlignment.Left
+status.Parent = root
+
 local message = Instance.new("TextLabel")
 message.Name = "Message"
-message.Size = UDim2.new(1, -24, 0, 54)
-message.Position = UDim2.fromOffset(12, 132)
+message.Size = UDim2.new(1, -24, 0, 58)
+message.Position = UDim2.fromOffset(12, 156)
 message.BackgroundTransparency = 1
 message.Font = Enum.Font.GothamMedium
 message.Text = Config.Mission.StartMessage
@@ -129,6 +141,10 @@ local function applyState(payload)
         objective.Text = payload.Objective
     end
 
+    if payload.Status then
+        status.Text = string.format("%s: %s", Config.UI.StatusLabel, payload.Status)
+    end
+
     if payload.Message then
         message.Text = payload.Message
     end
@@ -136,6 +152,11 @@ local function applyState(payload)
     if payload.IsComplete then
         stroke.Color = theme.SuccessColor
         message.TextColor3 = theme.SuccessColor
+        status.TextColor3 = theme.SuccessColor
+    else
+        stroke.Color = theme.AccentColor
+        message.TextColor3 = theme.TextColor
+        status.TextColor3 = theme.WarningColor
     end
 end
 

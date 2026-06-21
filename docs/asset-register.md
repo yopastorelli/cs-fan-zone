@@ -17,3 +17,4 @@ Register every external asset before importing it into Roblox Studio.
 
 - NC, SA, GPL, unclear, or mixed-license assets.
 - Logos, real people, recognizable creator likenesses, copied slogans, ripped audio, screenshots, or off-platform links.
+- Fandom reuploads, unofficial mirrors, or "inspired" packs that already expose protected IP.

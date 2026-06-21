@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
@@ -63,9 +62,12 @@ end
 
 local function serializeState(player, message)
     local state = getOrCreateState(player)
+    local objectiveText = state.Complete and Config.Mission.PhotoPromptMessage or Config.Mission.ObjectiveText
+    local statusText = state.Complete and "Final liberado" or "Explorando"
 
     return {
-        Objective = Config.Mission.ObjectiveText,
+        Objective = objectiveText,
+        Status = statusText,
         CollectiblesFound = state.Collectibles.count,
         CollectibleGoal = state.Collectibles.goal,
         POIsActivated = state.POIs.count,
@@ -75,30 +77,6 @@ local function serializeState(player, message)
         ActivatedPOIIds = Counter.ids(state.POIs),
         Message = message or Config.Mission.StartMessage,
     }
-end
-
-local function getFinalGate()
-    local world = Workspace:FindFirstChild("CSFanZone")
-    local room = world and world:FindFirstChild(Config.Areas.FinalCelebrationRoom.Name)
-    return room and room:FindFirstChild("FinalGate")
-end
-
-local function unlockFinalRoom()
-    local gate = getFinalGate()
-    if not gate then
-        return
-    end
-
-    gate.CanCollide = false
-    gate.Transparency = 0.85
-    gate.Color = Config.Areas.FinalCelebrationRoom.AccentColor
-    gate:SetAttribute("Unlocked", true)
-
-    local gui = gate:FindFirstChild("SurfaceGui")
-    local label = gui and gui:FindFirstChild("TextLabel")
-    if label then
-        label.Text = "Sala Final\nAberta"
-    end
 end
 
 local function sendState(player, message)
@@ -115,7 +93,6 @@ local function checkCompletion(player)
     if Counter.isComplete(state.Collectibles) and Counter.isComplete(state.POIs) then
         state.Complete = true
         updateStats(player)
-        unlockFinalRoom()
         remotes.FinalRoomUnlocked:FireClient(player, serializeState(player, Config.Mission.CompletionMessage))
         sendState(player, Config.Mission.CompletionMessage)
         return true
@@ -198,6 +175,14 @@ function MissionState.ActivatePOI(player, poiId)
     end
 
     return true
+end
+
+function MissionState.IsComplete(player)
+    return getOrCreateState(player).Complete
+end
+
+function MissionState.SendState(player, message)
+    sendState(player, message)
 end
 
 function MissionState.Initialize()

@@ -45,6 +45,9 @@ local Config = {
         DuplicateCollectibleMessage = "Essa memoria ja foi registrada.",
         DuplicatePoiMessage = "Esse ponto ja foi ativado.",
         CompletionMessage = "Circuito completo. A Sala Final foi desbloqueada.",
+        PhotoPromptMessage = "Tudo pronto para o print final.",
+        BlockedFinalRoomMessage = "Complete 12 memorias e 3 POIs para entrar na Sala Final.",
+        FinalRoomPromptText = "Entrar",
     },
 
     Collectibles = {
@@ -93,6 +96,7 @@ local Config = {
         Title = "CS Fan Zone",
         CollectiblesLabel = "Memorias",
         PoiLabel = "POIs",
+        StatusLabel = "Ritual",
         Theme = {
             BackgroundColor = Color3.fromRGB(16, 20, 28),
             PanelColor = Color3.fromRGB(24, 30, 42),
@@ -102,6 +106,7 @@ local Config = {
             MutedTextColor = Color3.fromRGB(182, 194, 210),
             SuccessColor = Color3.fromRGB(96, 255, 170),
             WarningColor = Color3.fromRGB(255, 205, 80),
+            SecretGlowColor = Color3.fromRGB(255, 255, 255),
         },
     },
 
@@ -115,6 +120,8 @@ local Config = {
         MaturityTarget = "Minimal",
         AllowRealNames = false,
         AllowLogos = false,
+        AllowRecognizableLikeness = false,
+        AllowRecognizableSlogans = false,
         AllowOffPlatformLinks = false,
         AssetRegisterPath = "docs/asset-register.md",
     },
