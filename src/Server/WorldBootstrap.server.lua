@@ -16,6 +16,11 @@ local function clearChildren(instance)
 end
 
 local function ensureWorldRoot()
+    local baseplate = Workspace:FindFirstChild("Baseplate")
+    if baseplate then
+        baseplate:Destroy()
+    end
+
     local root = Workspace:FindFirstChild(WORLD_NAME)
     if not root then
         root = Instance.new("Folder")
@@ -138,8 +143,8 @@ local function makePath(parent, startPosition, endPosition, color)
     local path = makePart(
         parent,
         "Path",
-        Vector3.new(10, 1, distance),
-        CFrame.lookAt(midpoint + Vector3.new(0, 0.08, 0), endPosition),
+        Vector3.new(10, 0.35, distance),
+        CFrame.lookAt(midpoint + Vector3.new(0, 0.2, 0), endPosition),
         color,
         Enum.Material.Neon
     )
