@@ -4,7 +4,7 @@ Register every external asset before importing it into Roblox Studio.
 
 | ID | Asset name | Source | URL | Author | License | Date checked | Project use | Notes |
 |---|---|---|---|---|---|---|---|---|
-| internal-parts-001 | MVP world geometry | Generated in code | n/a | Project | Original | 2026-06-21 | Floors, signs, collectibles, POIs | Built from Roblox instances only |
+| internal-parts-001 | Arena world geometry | Generated in code | n/a | Project | Original | 2026-06-21 | Bases, center island, generators, shops, cores, HUD-linked stands | Built from Roblox instances only |
 
 ## Allowed by default
 

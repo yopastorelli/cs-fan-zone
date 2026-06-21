@@ -4,10 +4,14 @@ local RunService = game:GetService("RunService")
 local REMOTE_FOLDER_NAME = "CSFanZoneRemotes"
 
 local RemoteNames = {
-    CollectibleCollected = "CollectibleCollected",
-    PoiActivated = "PoiActivated",
-    MissionStateUpdated = "MissionStateUpdated",
-    FinalRoomUnlocked = "FinalRoomUnlocked",
+    MatchStateUpdated = "MatchStateUpdated",
+    TeamStateUpdated = "TeamStateUpdated",
+    InventoryUpdated = "InventoryUpdated",
+    AnnouncementPushed = "AnnouncementPushed",
+    ShopOpened = "ShopOpened",
+    PurchaseRequested = "PurchaseRequested",
+    UpgradeRequested = "UpgradeRequested",
+    RespawnStateUpdated = "RespawnStateUpdated",
 }
 
 local function ensureFolder()
@@ -23,7 +27,6 @@ local function ensureFolder()
     folder = Instance.new("Folder")
     folder.Name = REMOTE_FOLDER_NAME
     folder.Parent = ReplicatedStorage
-
     return folder
 end
 
@@ -41,7 +44,6 @@ local function ensureRemoteEvent(name)
     remote = Instance.new("RemoteEvent")
     remote.Name = name
     remote.Parent = folder
-
     return remote
 end
 

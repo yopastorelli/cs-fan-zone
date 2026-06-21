@@ -8,49 +8,41 @@ end
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
-local Counter = require(Shared:WaitForChild("Counter"))
 local WorldData = require(Shared:WaitForChild("WorldData"))
 
-local state = Counter.new(3)
-TestService:Check(state.count == 0, "counter starts at zero", script, 1)
-TestService:Check(Counter.isComplete(state) == false, "counter does not start complete", script, 2)
+TestService:Check(#Config.Teams == 6, "exactly six teams configured", script, 1)
+TestService:Check(#WorldData.MidIslands == 6, "exactly six mid islands configured", script, 2)
+TestService:Check(#Config.TeamUpgrades.Items >= 3, "at least three upgrades configured", script, 3)
+TestService:Check(#Config.Shop.Items >= 4, "at least four shop items configured", script, 4)
 
-local firstCollectChanged = Counter.collect(state, "a")
-local duplicateCollectChanged = Counter.collect(state, "a")
-TestService:Check(firstCollectChanged == true, "first collect changes state", script, 3)
-TestService:Check(duplicateCollectChanged == false, "duplicate collect does not change state", script, 4)
-TestService:Check(state.count == 1, "duplicate collect is not counted", script, 5)
-
-Counter.collect(state, "b")
-Counter.collect(state, "c")
-TestService:Check(Counter.isComplete(state) == true, "counter completes at goal", script, 6)
-
-local function checkUniqueIds(items, fieldName, label, startIndex)
-    local seen = {}
-
-    for index, item in ipairs(items) do
-        local id = item[fieldName]
-        TestService:Check(typeof(id) == "string" and id ~= "", label .. " id is present " .. tostring(index), script, startIndex + index)
-        TestService:Check(seen[id] ~= true, label .. " id is unique " .. tostring(index), script, startIndex + 100 + index)
-        seen[id] = true
-    end
+local seenTeams = {}
+local totalMembers = 0
+for index, team in ipairs(Config.Teams) do
+    TestService:Check(typeof(team.Id) == "string" and team.Id ~= "", "team id present " .. tostring(index), script, 10 + index)
+    TestService:Check(seenTeams[team.Id] ~= true, "team id unique " .. tostring(index), script, 20 + index)
+    TestService:Check(typeof(team.BiomeDisplayName) == "string" and team.BiomeDisplayName ~= "", "biome display name present " .. tostring(index), script, 30 + index)
+    TestService:Check(#team.Members == 2, "team has two members " .. tostring(index), script, 40 + index)
+    seenTeams[team.Id] = true
+    totalMembers += #team.Members
+    TestService:Check(Config.Biomes[team.BiomeId] ~= nil, "biome id mapped " .. tostring(index), script, 50 + index)
 end
 
-TestService:Check(#Config.Collectibles == Config.Mission.CollectibleGoal, "collectible count matches mission goal", script, 10)
-TestService:Check(#Config.POIs == Config.Mission.PoiGoal, "poi count matches mission goal", script, 11)
-checkUniqueIds(Config.Collectibles, "Id", "collectible", 20)
-checkUniqueIds(Config.POIs, "Id", "poi", 60)
+TestService:Check(totalMembers == 12, "twelve roster slots configured", script, 70)
 
-for index, collectible in ipairs(Config.Collectibles) do
-    TestService:Check(Config.Areas[collectible.Area] ~= nil, "collectible area exists " .. tostring(index), script, 120 + index)
+local seenShopItems = {}
+for index, item in ipairs(Config.Shop.Items) do
+    TestService:Check(seenShopItems[item.Id] ~= true, "shop item unique " .. tostring(index), script, 80 + index)
+    TestService:Check(type(item.Cost) == "number" and item.Cost > 0, "shop item cost valid " .. tostring(index), script, 90 + index)
+    TestService:Check(Config.Generators.ResourceDefinitions[item.ResourceType] ~= nil, "shop item resource valid " .. tostring(index), script, 100 + index)
+    seenShopItems[item.Id] = true
 end
 
-for index, poi in ipairs(Config.POIs) do
-    TestService:Check(Config.Areas[poi.Area] ~= nil, "poi area exists " .. tostring(index), script, 150 + index)
+local seenUpgrades = {}
+for index, item in ipairs(Config.TeamUpgrades.Items) do
+    TestService:Check(seenUpgrades[item.Id] ~= true, "upgrade unique " .. tostring(index), script, 120 + index)
+    TestService:Check(#item.TierCosts == #item.EffectValues, "upgrade tiers aligned " .. tostring(index), script, 130 + index)
+    seenUpgrades[item.Id] = true
 end
 
-for index, areaName in ipairs(WorldData.AreasInOrder) do
-    TestService:Check(Config.Areas[areaName] ~= nil, "world area order references config area " .. tostring(index), script, 180 + index)
-end
-
-TestService:Check(typeof(WorldData.FinalRoomAccess.TargetPosition) == "Vector3", "final room access target exists", script, 210)
+TestService:Check(typeof(WorldData.CenterIsland.Position) == "Vector3", "center island configured", script, 150)
+TestService:Check(typeof(WorldData.SpectatorDeck.Position) == "Vector3", "spectator deck configured", script, 151)

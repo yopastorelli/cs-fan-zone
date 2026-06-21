@@ -26,15 +26,15 @@ end
 
 local function onPlayerAdded(player)
     local leaderstats = getOrCreateStatFolder(player)
-    local memories = getOrCreateIntValue(leaderstats, "Memories")
-    local pois = getOrCreateIntValue(leaderstats, "POIs")
+    getOrCreateIntValue(leaderstats, "Kills").Value = 0
+    getOrCreateIntValue(leaderstats, "FinalKills").Value = 0
+    getOrCreateIntValue(leaderstats, "Wins").Value = 0
+    getOrCreateIntValue(leaderstats, "CoresBroken").Value = 0
 
-    memories.Value = 0
-    pois.Value = 0
-
-    player:SetAttribute("MemoriesFound", 0)
-    player:SetAttribute("POIsActivated", 0)
-    player:SetAttribute("MissionComplete", false)
+    player:SetAttribute("TeamId", "")
+    player:SetAttribute("CoreAlive", false)
+    player:SetAttribute("Eliminated", false)
+    player:SetAttribute("InMatch", false)
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)

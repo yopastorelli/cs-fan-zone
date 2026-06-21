@@ -2,7 +2,8 @@
 
 ## 2026-06-21
 - Created Rojo/Rokit project bootstrap.
-- Built exploration MVP around 12 memories, 3 POIs, and a final celebration room.
-- Added server-authoritative mission state, collectible service, POI service, final gate validation, HUD, local feedback, and Studio smoke tests.
-- Added procedural world data for CentralPlaza, NostalgiaWall, ClipStage, MemeLounge, FinalCelebrationRoom, landmarks, archetypes, lore signs, prank puzzle, and selfie payoff.
-- Added compliance gates for indirect original references only: no real names, logos, voices, copied slogans, recognizable avatars, off-platform links, or personal-data collection.
+- Replaced the exploration loop with a 6 duplas competitive arena.
+- Added six biome bases in Portuguese: Planicie, Deserto, Taiga, Selva, Neve, Cogumelos.
+- Added server-authoritative match flow, team assignment, generators, item shop, upgrades, cores, respawn, elimination, and victory resolution.
+- Added procedural BedWars-like combat tools for sword, pickaxe, healing, and wool block placement.
+- Preserved compliance gates for original, non-branded content only.
