@@ -31,6 +31,7 @@ local function onHumanoidDied(player, humanoid)
         })
         task.delay(Config.Match.RespawnSeconds, function()
             if player.Parent and playerState.TeamId and ArenaState.IsCoreAlive(playerState.TeamId) then
+                ArenaState.ApplyRespawnLocation(player)
                 player:LoadCharacter()
             end
         end)
@@ -42,6 +43,7 @@ local function onHumanoidDied(player, humanoid)
         })
         task.delay(2, function()
             if player.Parent then
+                ArenaState.ApplyRespawnLocation(player)
                 player:LoadCharacter()
             end
         end)
@@ -60,17 +62,20 @@ local function setupCharacter(player, character)
 
     if playerState.Spectating then
         task.defer(function()
+            ArenaState.ApplyRespawnLocation(player)
             ArenaState.TeleportPlayerToSpectator(player)
         end)
         rootPart.CanCollide = true
     elseif playerState.InLobby then
         task.defer(function()
+            ArenaState.ApplyRespawnLocation(player)
             ArenaState.TeleportPlayerToLobby(player)
             ArenaState.BroadcastMatchState()
             ArenaState.BroadcastTeamState(player)
         end)
     elseif playerState.InMatch then
         task.defer(function()
+            ArenaState.ApplyRespawnLocation(player)
             ArenaState.TeleportPlayerToBase(player)
             ArenaState.MarkPlayerAlive(player)
             ArenaState.BroadcastMatchState()
@@ -79,12 +84,14 @@ local function setupCharacter(player, character)
 end
 
 Players.PlayerAdded:Connect(function(player)
+    ArenaState.ApplyRespawnLocation(player)
     player.CharacterAdded:Connect(function(character)
         setupCharacter(player, character)
     end)
 end)
 
 for _, player in ipairs(Players:GetPlayers()) do
+    ArenaState.ApplyRespawnLocation(player)
     if player.Character then
         task.spawn(setupCharacter, player, player.Character)
     end

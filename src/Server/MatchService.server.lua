@@ -58,6 +58,7 @@ local function beginRound(players)
     ArenaState.PushAnnouncement("Rodada iniciada. Protejam o nucleo e avancem pelo centro.", "Accent")
 
     for _, player in ipairs(players) do
+        ArenaState.ApplyRespawnLocation(player)
         player:LoadCharacter()
     end
 
@@ -79,6 +80,7 @@ local function returnEveryoneToLobby()
     clearRoundDebris()
     clearInventories()
     for _, player in ipairs(Players:GetPlayers()) do
+        ArenaState.ApplyRespawnLocation(player)
         player:LoadCharacter()
     end
 end

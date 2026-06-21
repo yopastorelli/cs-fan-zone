@@ -20,6 +20,8 @@ local ArenaState = {
     MatchPlayers = {},
     CoreInstances = {},
     ShopInstances = {},
+    TeamSpawns = {},
+    LobbySpawn = nil,
     SpectatorSpawn = nil,
 }
 
@@ -40,9 +42,16 @@ local function getWorld()
 end
 
 local function getLobbySpawn()
+    if ArenaState.LobbySpawn and ArenaState.LobbySpawn.Parent then
+        return ArenaState.LobbySpawn
+    end
     local world = getWorld()
     local lobby = world and world:FindFirstChild("Lobby")
-    return lobby and lobby:FindFirstChild("LobbySpawn")
+    local spawn = lobby and lobby:FindFirstChild("LobbySpawn")
+    if spawn then
+        ArenaState.LobbySpawn = spawn
+    end
+    return spawn
 end
 
 local function ensurePlayerState(player)
@@ -188,6 +197,7 @@ function ArenaState.ResetRoundState()
         state.InLobby = true
         if player.Parent then
             player.Team = nil
+            player.RespawnLocation = getLobbySpawn()
             player:SetAttribute("TeamId", "")
             player:SetAttribute("CoreAlive", false)
             player:SetAttribute("Eliminated", false)
@@ -383,6 +393,7 @@ function ArenaState.AssignPlayersToTeams(players)
         player:SetAttribute("Eliminated", false)
         player:SetAttribute("InMatch", true)
         player:SetAttribute("PlayerPhase", "InMatch")
+        ArenaState.ApplyRespawnLocation(player)
     end
 
     ArenaState.BroadcastAllTeamState()
@@ -421,6 +432,14 @@ function ArenaState.RegisterCore(teamId, corePart)
     ArenaState.CoreInstances[teamId] = corePart
 end
 
+function ArenaState.RegisterLobbySpawn(spawnPart)
+    ArenaState.LobbySpawn = spawnPart
+end
+
+function ArenaState.RegisterTeamSpawn(teamId, spawnPart)
+    ArenaState.TeamSpawns[teamId] = spawnPart
+end
+
 function ArenaState.RegisterShop(teamId, kind, part)
     ArenaState.ShopInstances[teamId] = ArenaState.ShopInstances[teamId] or {}
     ArenaState.ShopInstances[teamId][kind] = part
@@ -428,6 +447,21 @@ end
 
 function ArenaState.RegisterSpectatorSpawn(part)
     ArenaState.SpectatorSpawn = part
+end
+
+function ArenaState.ApplyRespawnLocation(player)
+    local state = ensurePlayerState(player)
+    if state.Spectating then
+        player.RespawnLocation = ArenaState.SpectatorSpawn
+        return
+    end
+
+    if state.InMatch and state.TeamId then
+        player.RespawnLocation = ArenaState.TeamSpawns[state.TeamId]
+        return
+    end
+
+    player.RespawnLocation = getLobbySpawn()
 end
 
 function ArenaState.GetForgeMultiplier(teamId)
@@ -619,6 +653,7 @@ function ArenaState.EliminatePlayer(player)
     state.Eliminated = true
     state.Spectating = true
     state.InLobby = false
+    ArenaState.ApplyRespawnLocation(player)
     player:SetAttribute("Eliminated", true)
     player:SetAttribute("PlayerPhase", "Spectating")
     ArenaState.BroadcastInventory(player)
@@ -725,10 +760,11 @@ end
 
 function ArenaState.TeleportPlayerToBase(player)
     local teamConfig = ArenaState.GetPlayerTeamConfig(player)
-    if not teamConfig or not player.Character then
+    local spawnPart = teamConfig and ArenaState.TeamSpawns[teamConfig.Id]
+    if not teamConfig or not spawnPart or not player.Character then
         return
     end
-    player.Character:PivotTo(CFrame.new(teamConfig.BasePosition + Vector3.new(0, 5, 18)))
+    player.Character:PivotTo(spawnPart.CFrame + Vector3.new(0, 4, 0))
 end
 
 function ArenaState.TeleportPlayerToLobby(player)

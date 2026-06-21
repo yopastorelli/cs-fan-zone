@@ -67,6 +67,8 @@ local function makeSpawn(parent, name, cframe, color, neutral, teamColor)
     spawn.Size = Vector3.new(11, 1, 11)
     spawn.Anchored = true
     spawn.Neutral = neutral
+    spawn.AllowTeamChangeOnTouch = false
+    spawn.Duration = 0
     spawn.Color = color
     spawn.Material = Enum.Material.Neon
     spawn.CFrame = cframe
@@ -84,6 +86,7 @@ local function buildLobby(root)
 
     local spawn = makeSpawn(lobby, "LobbySpawn", CFrame.new(Config.World.Lobby.SpawnPosition), Config.UI.Theme.AccentColor, true)
     spawn:SetAttribute("SafeZone", true)
+    ArenaState.RegisterLobbySpawn(spawn)
 
     local stage = WorldBuilder.MakePart(
         lobby,
@@ -200,6 +203,7 @@ local function buildBase(root, teamConfig)
     WorldBuilder.BuildRouteMarkers(folder, teamConfig.BasePosition + Vector3.new(0, 1.2, -32), Vector3.new(0, 1.2, 0), kit.Accent)
 
     local spawn = makeSpawn(folder, "Spawn", CFrame.new(teamConfig.BasePosition + layout.SpawnOffset), teamConfig.Color, false, teamConfig.Color)
+    ArenaState.RegisterTeamSpawn(teamConfig.Id, spawn)
     WorldBuilder.MakePart(folder, "SpawnTrim", Vector3.new(16, 0.5, 16), CFrame.new(teamConfig.BasePosition + layout.SpawnOffset + Vector3.new(0, -0.4, 0)), teamConfig.Color:Lerp(Color3.new(1, 1, 1), 0.12), Enum.Material.SmoothPlastic, {
         CanCollide = false,
         Transparency = 0.16,
@@ -346,11 +350,20 @@ local function buildSpectatorDeck(root)
         Enum.Material.Metal,
         { Transparency = 0.08 }
     )
+    local spectatorSpawn = makeSpawn(
+        root,
+        "SpectatorSpawn",
+        CFrame.new(WorldData.SpectatorDeck.Position + Vector3.new(0, 2, 0)),
+        Color3.fromRGB(90, 104, 130),
+        true
+    )
+    spectatorSpawn.Transparency = 1
+    spectatorSpawn.CanCollide = false
     local deckSign = WorldBuilder.MakePart(root, "SpectatorSign", Vector3.new(16, 3.4, 1), CFrame.new(WorldData.SpectatorDeck.Position + Vector3.new(0, 5, -20)), Color3.fromRGB(18, 24, 34), Enum.Material.SmoothPlastic, {
         CanCollide = false,
     })
     WorldBuilder.AddSurfaceText(deckSign, Enum.NormalId.Front, "Espectador", VisualKit.Global.TextLight, 24)
-    ArenaState.RegisterSpectatorSpawn(deck)
+    ArenaState.RegisterSpectatorSpawn(spectatorSpawn)
 end
 
 local function buildArenaBackdrop(root)
