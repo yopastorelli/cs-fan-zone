@@ -18,6 +18,7 @@ local ArenaState = {
     Teams = {},
     TeamObjects = {},
     MatchPlayers = {},
+    ActiveTeamIds = {},
     CoreInstances = {},
     ShopInstances = {},
     TeamSpawns = {},
@@ -108,12 +109,99 @@ end
 local function getHelpText(player)
     local phase = ArenaState.GetPlayerPhase(player)
     if phase == "Lobby" then
+        if ArenaState.MatchState == "Active" or ArenaState.MatchState == "SuddenDeath" or ArenaState.MatchState == "Ended" then
+            return Config.UI.Hints.LateJoin
+        end
         return Config.UI.HelpMessagesByState[ArenaState.MatchState] or Config.UI.HelpMessagesByState.Lobby
     end
     if phase == "Spectating" then
         return Config.UI.HelpMessagesByState.Spectating
     end
     return Config.UI.HelpMessagesByState[ArenaState.MatchState] or ""
+end
+
+local function getSupportedTeamCountForPlayers(playerCount)
+    local supported = Config.Match.SupportedTeamCounts
+    local pairCount = math.floor(playerCount / Config.Match.PreferredPlayersPerTeam)
+    local selected = supported[1]
+
+    for _, value in ipairs(supported) do
+        if pairCount >= value then
+            selected = value
+        else
+            break
+        end
+    end
+
+    return math.clamp(selected or Config.Match.MinTeamsToStart, Config.Match.MinTeamsToStart, supported[#supported])
+end
+
+local function getProjectedTeamCount(playerCount)
+    if playerCount <= 0 then
+        return Config.Match.MinTeamsToStart
+    end
+    return getSupportedTeamCountForPlayers(playerCount)
+end
+
+local function isTeamActive(teamId)
+    return ArenaState.ActiveTeamIds[teamId] == true
+end
+
+local function setSurfaceText(part, text)
+    local surfaceGui = part and part:FindFirstChild("SurfaceGui")
+    local label = surfaceGui and surfaceGui:FindFirstChild("TextLabel")
+    if label and label:IsA("TextLabel") then
+        label.Text = text
+    end
+end
+
+local function updateBaseVisualState(teamId, active)
+    local world = getWorld()
+    local baseFolder = world and world:FindFirstChild(teamId)
+    local teamConfig = findTeamConfig(teamId)
+    if not baseFolder or not teamConfig then
+        return
+    end
+
+    baseFolder:SetAttribute("ActiveInRound", active)
+
+    for _, descendant in ipairs(baseFolder:GetDescendants()) do
+        if descendant:IsA("BasePart") then
+            if descendant:GetAttribute("OriginalTransparency") == nil then
+                descendant:SetAttribute("OriginalTransparency", descendant.Transparency)
+            end
+            local originalTransparency = descendant:GetAttribute("OriginalTransparency") or 0
+            if active then
+                descendant.Transparency = originalTransparency
+            else
+                descendant.Transparency = math.clamp(originalTransparency + 0.45, 0, 0.82)
+            end
+        elseif descendant:IsA("ProximityPrompt") then
+            descendant.Enabled = active
+        end
+    end
+
+    local banner = baseFolder:FindFirstChild("BiomeBanner")
+    if banner and banner:IsA("BasePart") then
+        setSurfaceText(banner, active and teamConfig.BiomeDisplayName or (teamConfig.BiomeDisplayName .. "\nReserva"))
+    end
+end
+
+local function getRoundFormatLabel(teamCount, inMatch)
+    local template = inMatch and Config.UI.AdaptiveQueueText.Active or Config.UI.AdaptiveQueueText.Format
+    return string.format(template, teamCount)
+end
+
+local function getObjectiveText(player)
+    local phase = ArenaState.GetPlayerPhase(player)
+    if phase == "InMatch" then
+        return Config.UI.Onboarding.ByPhase.Active or Config.UI.Onboarding.Objectives
+    elseif phase == "Spectating" then
+        return Config.UI.Onboarding.ByPhase.Spectating or Config.UI.Onboarding.Objectives
+    elseif ArenaState.MatchState == "Starting" then
+        return Config.UI.Onboarding.ByPhase.Starting or Config.UI.Onboarding.Objectives
+    end
+    return Config.UI.Onboarding.ByPhase.Lobby or Config.UI.Onboarding.Objectives
 end
 
 function ArenaState.Initialize()
@@ -172,6 +260,7 @@ end
 
 function ArenaState.ResetRoundState()
     ArenaState.MatchPlayers = {}
+    ArenaState.ActiveTeamIds = {}
     ArenaState.WinningTeamId = nil
     ArenaState.MatchEndReason = "Reset"
 
@@ -205,6 +294,8 @@ function ArenaState.ResetRoundState()
             player:SetAttribute("PlayerPhase", "Lobby")
         end
     end
+
+    ArenaState.SetProjectedActiveTeams(ArenaState.GetEligiblePlayerCount())
 end
 
 function ArenaState.SetMatchState(nextState, seconds, extra)
@@ -266,15 +357,17 @@ function ArenaState.GetTeamStandings()
     local standings = {}
     for _, teamConfig in ipairs(Config.Teams) do
         local team = getTeamById(teamConfig.Id)
-        standings[#standings + 1] = {
-            TeamId = team.Id,
-            DisplayName = team.DisplayName,
-            BiomeDisplayName = team.BiomeDisplayName,
-            AlivePlayers = team.AlivePlayers,
-            CoreAlive = team.CoreAlive,
-            CoreHealth = team.CoreHealth,
-            Color = team.Color,
-        }
+        if isTeamActive(team.Id) then
+            standings[#standings + 1] = {
+                TeamId = team.Id,
+                DisplayName = team.DisplayName,
+                BiomeDisplayName = team.BiomeDisplayName,
+                AlivePlayers = team.AlivePlayers,
+                CoreAlive = team.CoreAlive,
+                CoreHealth = team.CoreHealth,
+                Color = team.Color,
+            }
+        end
     end
     return standings
 end
@@ -285,17 +378,36 @@ end
 
 function ArenaState.BroadcastMatchState()
     local queueCount = ArenaState.GetEligiblePlayerCount()
+    local inResolvedRoundState = ArenaState.MatchState == "Active"
+        or ArenaState.MatchState == "SuddenDeath"
+        or ArenaState.MatchState == "Ended"
+    local projectedTeamCount = inResolvedRoundState
+        and ArenaState.GetActiveTeamCount()
+        or getProjectedTeamCount(queueCount)
+    local playersNeededForNextRecommendedFormat
+    if queueCount < Config.Match.MinPlayersToStart then
+        playersNeededForNextRecommendedFormat = math.max(0, (Config.Match.MinTeamsToStart * Config.Match.PreferredPlayersPerTeam) - queueCount)
+    else
+        local nextSupportedTeamCount = math.min(Config.Match.SupportedTeamCounts[#Config.Match.SupportedTeamCounts], projectedTeamCount + 1)
+        playersNeededForNextRecommendedFormat = math.max(0, (nextSupportedTeamCount * Config.Match.PreferredPlayersPerTeam) - queueCount)
+    end
+
     for _, player in ipairs(Players:GetPlayers()) do
+        local phase = ArenaState.GetPlayerPhase(player)
         remotes.MatchStateUpdated:FireClient(player, {
             MatchState = ArenaState.MatchState,
             StateEndsAt = ArenaState.StateEndsAt,
             QueueCount = queueCount,
             MinPlayersToStart = Config.Match.MinPlayersToStart,
-            PlayerPhase = ArenaState.GetPlayerPhase(player),
-            ObjectiveText = Config.UI.Onboarding.Objectives,
+            PlayerPhase = phase,
+            ObjectiveText = getObjectiveText(player),
             HelpText = getHelpText(player),
             WinningTeamId = ArenaState.WinningTeamId,
             EndReason = ArenaState.MatchEndReason,
+            ActiveTeamCount = ArenaState.GetActiveTeamCount(),
+            QueuedPlayers = queueCount,
+            PlayersNeededForNextRecommendedFormat = playersNeededForNextRecommendedFormat,
+            RoundFormatLabel = getRoundFormatLabel(projectedTeamCount, phase == "InMatch" or phase == "Spectating"),
         })
     end
 end
@@ -320,6 +432,12 @@ function ArenaState.BroadcastTeamState(player)
             protection = team.UpgradeLevels.protection,
             forge = team.UpgradeLevels.forge,
         } or nil
+        payload.HasStarterWeapon = ArenaState.PlayerHasTool(player, Config.UI.StarterRecommendations.SwordItemId)
+        payload.HasPickaxe = ArenaState.PlayerHasTool(player, Config.UI.StarterRecommendations.PickaxeItemId)
+        payload.CanAffordStarterBlock = ArenaState.CanAfford(player, "Iron", 16)
+        payload.CanAffordStarterSword = ArenaState.CanAfford(player, "Gold", 8)
+        payload.CoreExposedWarning = payload.OwnCoreAlive and not payload.HasPickaxe and not payload.HasStarterWeapon
+        payload.OwnLoadoutHints = ArenaState.GetLoadoutHints(player)
         if phase ~= "Lobby" then
             payload.Standings = ArenaState.GetTeamStandings()
         end
@@ -368,10 +486,29 @@ function ArenaState.PushFeedback(player, feedbackType, payload)
 end
 
 function ArenaState.AssignPlayersToTeams(players)
-    ArenaState.MatchPlayers = shallowCopyArray(players)
+    local activeTeamCount = getSupportedTeamCountForPlayers(#players)
+    local selectedPlayers = {}
+    local selectedTeams = {}
+    local playerLimit = activeTeamCount * Config.Match.PreferredPlayersPerTeam
+
+    ArenaState.MatchPlayers = {}
+    ArenaState.ActiveTeamIds = {}
+
+    for index = 1, activeTeamCount do
+        local teamConfig = Config.Teams[index]
+        selectedTeams[#selectedTeams + 1] = teamConfig
+        ArenaState.ActiveTeamIds[teamConfig.Id] = true
+    end
+
+    for _, teamConfig in ipairs(Config.Teams) do
+        updateBaseVisualState(teamConfig.Id, ArenaState.ActiveTeamIds[teamConfig.Id] == true)
+    end
 
     for index, player in ipairs(players) do
-        local teamConfig = Config.Teams[((index - 1) % #Config.Teams) + 1]
+        if index > playerLimit then
+            break
+        end
+        local teamConfig = selectedTeams[((index - 1) % #selectedTeams) + 1]
         local team = getTeamById(teamConfig.Id)
         local playerState = ensurePlayerState(player)
 
@@ -394,12 +531,16 @@ function ArenaState.AssignPlayersToTeams(players)
         player:SetAttribute("InMatch", true)
         player:SetAttribute("PlayerPhase", "InMatch")
         ArenaState.ApplyRespawnLocation(player)
+        selectedPlayers[#selectedPlayers + 1] = player
     end
 
+    ArenaState.MatchPlayers = shallowCopyArray(selectedPlayers)
+
     ArenaState.BroadcastAllTeamState()
-    for _, player in ipairs(players) do
+    for _, player in ipairs(selectedPlayers) do
         ArenaState.BroadcastInventory(player)
     end
+    return selectedPlayers
 end
 
 function ArenaState.AddResource(player, resourceType, amount)
@@ -739,6 +880,73 @@ function ArenaState.GetShopPart(player, kind)
     local state = ensurePlayerState(player)
     local shops = state.TeamId and ArenaState.ShopInstances[state.TeamId]
     return shops and shops[kind] or nil
+end
+
+function ArenaState.PlayerHasTool(player, itemId)
+    local configById = {}
+    for _, item in ipairs(Config.Shop.Items) do
+        configById[item.Id] = item
+    end
+    local itemConfig = configById[itemId]
+    if not itemConfig then
+        return false
+    end
+
+    local displayName = itemConfig.DisplayName
+    local backpack = player:FindFirstChild("Backpack")
+    if backpack and backpack:FindFirstChild(displayName) then
+        return true
+    end
+    local character = player.Character
+    return character and character:FindFirstChild(displayName) ~= nil or false
+end
+
+function ArenaState.GetLoadoutHints(player)
+    local hints = {}
+    local state = ensurePlayerState(player)
+    if ArenaState.GetPlayerPhase(player) ~= "InMatch" then
+        return hints
+    end
+
+    if (state.Resources.Iron or 0) <= 0 and (state.Resources.Gold or 0) <= 0 then
+        hints[#hints + 1] = Config.UI.Hints.NoResources
+    end
+    if ArenaState.CanAfford(player, "Iron", 16) then
+        hints[#hints + 1] = Config.UI.Hints.CanBuyBlocks
+    end
+    if ArenaState.CanAfford(player, "Gold", 8) then
+        hints[#hints + 1] = Config.UI.Hints.CanBuySword
+    end
+    if not ArenaState.PlayerHasTool(player, Config.UI.StarterRecommendations.PickaxeItemId) then
+        hints[#hints + 1] = Config.UI.Hints.NeedPickaxe
+    end
+
+    return hints
+end
+
+function ArenaState.GetActiveTeamCount()
+    local count = 0
+    for _, active in pairs(ArenaState.ActiveTeamIds) do
+        if active then
+            count += 1
+        end
+    end
+    return count
+end
+
+function ArenaState.IsTeamActive(teamId)
+    return isTeamActive(teamId)
+end
+
+function ArenaState.SetProjectedActiveTeams(playerCount)
+    local projectedCount = getProjectedTeamCount(playerCount)
+    local activeMap = {}
+    for index = 1, projectedCount do
+        activeMap[Config.Teams[index].Id] = true
+    end
+    for _, teamConfig in ipairs(Config.Teams) do
+        updateBaseVisualState(teamConfig.Id, activeMap[teamConfig.Id] == true)
+    end
 end
 
 function ArenaState.ClearPlayerLoadout(player)

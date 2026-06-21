@@ -28,6 +28,9 @@ local uiScale = Instance.new("UIScale")
 uiScale.Parent = screenGui
 
 local onboardingDismissed = false
+local seenFeedbackHints = {}
+local baseGuideShownForTeam = {}
+local activeHighlights = {}
 
 local function updateScale()
     local camera = Workspace.CurrentCamera
@@ -126,8 +129,10 @@ topAccent.Parent = topBar
 makeLabel(topBar, "Title", Config.UI.Title, UDim2.new(1, -24, 0, 28), UDim2.fromOffset(12, 12), Enum.Font.GothamBlack, 24, theme.TextColor, Enum.TextXAlignment.Center)
 local stateLabel = makeLabel(topBar, "State", Config.UI.QueueText, UDim2.new(0.5, -12, 0, 24), UDim2.fromOffset(12, 44), Enum.Font.GothamBold, 17, theme.WarningColor, Enum.TextXAlignment.Left)
 local timerLabel = makeLabel(topBar, "Timer", "Tempo: --", UDim2.new(0.5, -12, 0, 24), UDim2.new(0.5, 0, 0, 44), Enum.Font.GothamBold, 17, theme.WarningColor, Enum.TextXAlignment.Right)
+local helpRibbon = makeFrame(screenGui, "HelpRibbon", UDim2.fromOffset(560, 38), UDim2.new(0.5, 0, 0, 98), Vector2.new(0.5, 0), theme.BackgroundColor, 0.02)
+local helpRibbonText = makeLabel(helpRibbon, "Text", "", UDim2.new(1, -20, 1, 0), UDim2.fromOffset(10, 0), Enum.Font.GothamBold, 15, theme.MutedTextColor, Enum.TextXAlignment.Center)
 
-local leftPanel = makeFrame(screenGui, "TeamPanel", UDim2.fromOffset(300, 170), UDim2.new(0, 18, 0.5, -85), Vector2.new(0, 0), theme.BackgroundColor, 0.04)
+local leftPanel = makeFrame(screenGui, "TeamPanel", UDim2.fromOffset(320, 232), UDim2.new(0, 18, 0.5, -116), Vector2.new(0, 0), theme.BackgroundColor, 0.04)
 addPadding(leftPanel, 12)
 local leftLayout = Instance.new("UIListLayout")
 leftLayout.Padding = UDim.new(0, 8)
@@ -135,6 +140,10 @@ leftLayout.Parent = leftPanel
 local teamLabel = makeLabel(leftPanel, "Team", "Time: Sem dupla", UDim2.new(1, 0, 0, 26), nil, Enum.Font.GothamBold, 17, theme.TextColor)
 local coreLabel = makeLabel(leftPanel, "Core", "Nucleo: --", UDim2.new(1, 0, 0, 24), nil, Enum.Font.GothamBold, 16, theme.MutedTextColor)
 local upgradeLabel = makeLabel(leftPanel, "Upgrades", "Upgrades: --", UDim2.new(1, 0, 0, 44), nil, Enum.Font.Gotham, 14, theme.MutedTextColor)
+local formatLabel = makeLabel(leftPanel, "Format", "Formato: --", UDim2.new(1, 0, 0, 22), nil, Enum.Font.GothamBold, 14, theme.WarningColor)
+local loadoutHint1 = makeLabel(leftPanel, "Hint1", "", UDim2.new(1, 0, 0, 22), nil, Enum.Font.GothamBold, 13, theme.TextColor)
+local loadoutHint2 = makeLabel(leftPanel, "Hint2", "", UDim2.new(1, 0, 0, 22), nil, Enum.Font.GothamBold, 13, theme.TextColor)
+local loadoutHint3 = makeLabel(leftPanel, "Hint3", "", UDim2.new(1, 0, 0, 22), nil, Enum.Font.GothamBold, 13, theme.TextColor)
 
 local standingsPanel = makeFrame(screenGui, "StandingsPanel", UDim2.fromOffset(310, 252), UDim2.new(1, -18, 0.5, -126), Vector2.new(1, 0), theme.BackgroundColor, 0.04)
 addPadding(standingsPanel, 10)
@@ -192,9 +201,10 @@ onboardingCloseCorner.CornerRadius = UDim.new(0, 8)
 onboardingCloseCorner.Parent = onboardingClose
 
 local queueLabel = makeLabel(onboardingCard, "Queue", "Fila: 0/0 jogadores", UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 56), Enum.Font.GothamBold, 16, theme.WarningColor, Enum.TextXAlignment.Left)
+local formatQueueLabel = makeLabel(onboardingCard, "FormatQueue", "Formato previsto: 2 duplas", UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 76), Enum.Font.GothamBold, 15, theme.MutedTextColor, Enum.TextXAlignment.Left)
 local objectiveRows = {}
 for index, objective in ipairs(Config.UI.Onboarding.Objectives) do
-    objectiveRows[index] = makeLabel(onboardingCard, "Objective" .. index, string.format("%d. %s", index, objective), UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 90 + ((index - 1) * 28)), Enum.Font.GothamBold, 14, theme.TextColor)
+    objectiveRows[index] = makeLabel(onboardingCard, "Objective" .. index, string.format("%d. %s", index, objective), UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 114 + ((index - 1) * 26)), Enum.Font.GothamBold, 14, theme.TextColor)
 end
 
 local helpToggle = Instance.new("TextButton")
@@ -279,6 +289,55 @@ local currentPhase = "Lobby"
 local currentMatchState = "Waiting"
 local currentResources = { Iron = 0, Gold = 0, Emerald = 0 }
 local currentUpgrades = { sharpness = 0, protection = 0, forge = 1 }
+local currentRoundFormatLabel = ""
+local currentHelpText = ""
+
+local function clearBaseHighlights()
+    for _, highlight in ipairs(activeHighlights) do
+        if highlight.Parent then
+            highlight:Destroy()
+        end
+    end
+    table.clear(activeHighlights)
+end
+
+local function addHighlight(part, color)
+    if not part or not part:IsA("BasePart") then
+        return
+    end
+    local highlight = Instance.new("Highlight")
+    highlight.FillTransparency = 0.8
+    highlight.OutlineTransparency = 0.05
+    highlight.OutlineColor = color
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = part
+    highlight.Parent = screenGui
+    activeHighlights[#activeHighlights + 1] = highlight
+end
+
+local function showBaseGuidance(teamId)
+    if not teamId or baseGuideShownForTeam[teamId] then
+        return
+    end
+    local world = Workspace:FindFirstChild("CSFanZone")
+    local base = world and world:FindFirstChild(teamId)
+    if not base then
+        return
+    end
+
+    clearBaseHighlights()
+    addHighlight(base:FindFirstChild("Core"), theme.SuccessColor)
+    addHighlight(base:FindFirstChild("ItemShop"), theme.AccentColor)
+    addHighlight(base:FindFirstChild("UpgradeShop"), Color3.fromRGB(180, 134, 255))
+    local generators = base:FindFirstChild("Generators")
+    if generators then
+        addHighlight(generators:FindFirstChild("BaseIron"), theme.MutedTextColor)
+        addHighlight(generators:FindFirstChild("BaseGold"), theme.WarningColor)
+    end
+    baseGuideShownForTeam[teamId] = true
+    showAnnouncement(Config.UI.Hints.FirstBase, theme.AccentColor, 5)
+    task.delay(12, clearBaseHighlights)
+end
 
 local function playConfiguredSound(soundId)
     if not soundId or soundId == "rbxassetid://0" then
@@ -318,12 +377,13 @@ local function updatePhaseVisibility()
     local showCountdown = showLobby and currentMatchState == "Starting"
     local showCompetitive = currentPhase == "InMatch" or currentPhase == "Spectating"
 
-    onboardingCard.Visible = showLobby and not showCountdown and not onboardingDismissed
-    helpToggle.Visible = showLobby and not showCountdown and onboardingDismissed
+    onboardingCard.Visible = not showCountdown and not onboardingDismissed
+    helpToggle.Visible = not showCountdown and onboardingDismissed
     countdownCard.Visible = showCountdown
     leftPanel.Visible = showCompetitive
     standingsPanel.Visible = showCompetitive
     resourceBar.Visible = showCompetitive and currentPhase == "InMatch"
+    helpRibbon.Visible = currentHelpText ~= ""
 end
 
 local function clearChildrenOfClass(parent, className)
@@ -397,7 +457,13 @@ local function buildShopButtons()
             button.TextColor3 = theme.TextColor
             button.BackgroundColor3 = affordable and theme.AccentColor or theme.PanelColor
             button.AutoButtonColor = affordable
-            button.Text = maxed and (item.DisplayName .. "\nMAX") or string.format("%s\n%s %d", item.DisplayName, Config.UI.ResourceLabels[item.ResourceType] or item.ResourceType, cost or 0)
+            local labelText = maxed and (item.DisplayName .. "\nMAX") or string.format("%s\n%s %d", item.DisplayName, Config.UI.ResourceLabels[item.ResourceType] or item.ResourceType, cost or 0)
+            if currentShopKind == "Items" and (item.Id == Config.UI.StarterRecommendations.BlockItemId or item.Id == Config.UI.StarterRecommendations.SwordItemId) then
+                labelText = labelText .. "\nINICIO"
+            elseif currentShopKind == "Items" and item.Id == Config.UI.StarterRecommendations.PickaxeItemId then
+                labelText = labelText .. "\nNUCLEO"
+            end
+            button.Text = labelText
             button.Parent = itemHolder
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 8)
@@ -475,6 +541,14 @@ remotes.TeamStateUpdated.OnClientEvent:Connect(function(payload)
     coreLabel.Text = string.format("Nucleo: %s (%d)", payload.OwnCoreAlive and "Ativo" or "Destruido", payload.OwnCoreHealth or 0)
     coreLabel.TextColor3 = payload.OwnCoreAlive and theme.SuccessColor or theme.DangerColor
     upgradeLabel.Text = string.format("Upgrades: espada %d | defesa %d | forja %d", currentUpgrades.sharpness or 0, currentUpgrades.protection or 0, currentUpgrades.forge or 1)
+    formatLabel.Text = currentRoundFormatLabel ~= "" and currentRoundFormatLabel or "Formato: --"
+    local hints = payload.OwnLoadoutHints or {}
+    loadoutHint1.Text = hints[1] or ""
+    loadoutHint2.Text = hints[2] or ""
+    loadoutHint3.Text = hints[3] or ""
+    if currentPhase == "InMatch" then
+        showBaseGuidance(payload.OwnTeamId)
+    end
 
     local standings = payload.Standings or {}
     for index, row in ipairs(standingRows) do
@@ -497,15 +571,31 @@ remotes.MatchStateUpdated.OnClientEvent:Connect(function(payload)
         return
     end
 
+    local previousPhase = currentPhase
     currentPhase = payload.PlayerPhase or currentPhase
     currentMatchState = payload.MatchState or currentMatchState
+    currentRoundFormatLabel = payload.RoundFormatLabel or ""
+    currentHelpText = payload.HelpText or ""
+
+    if previousPhase == "Lobby" and currentPhase ~= "Lobby" then
+        onboardingDismissed = true
+    elseif currentPhase == "Lobby" and previousPhase ~= "Lobby" then
+        table.clear(baseGuideShownForTeam)
+        clearBaseHighlights()
+    end
 
     stateLabel.Text = Config.UI.MatchStateLabels[currentMatchState] or currentMatchState
+    onboardingSubtitle.Text = currentHelpText
     local objectives = payload.ObjectiveText or Config.UI.Onboarding.Objectives
     for index, row in ipairs(objectiveRows) do
         row.Text = string.format("%d. %s", index, objectives[index] or "")
     end
     queueLabel.Text = string.format("Fila: %d/%d jogadores", payload.QueueCount or 0, payload.MinPlayersToStart or Config.Match.MinPlayersToStart)
+    formatQueueLabel.Text = (payload.RoundFormatLabel or "")
+        .. (((payload.PlayersNeededForNextRecommendedFormat or 0) > 0)
+            and ("  |  " .. string.format("Falta %d jogador(es) para o proximo formato", payload.PlayersNeededForNextRecommendedFormat or 0))
+            or "  |  Pronto para iniciar")
+    helpRibbonText.Text = currentHelpText
 
     local remaining = math.max(0, (payload.StateEndsAt or 0) - os.time())
     timerLabel.Text = string.format("%02d:%02d", math.floor(remaining / 60), remaining % 60)
@@ -535,9 +625,9 @@ remotes.RespawnStateUpdated.OnClientEvent:Connect(function(payload)
 
     if payload.Spectating then
         currentPhase = "Spectating"
-        showAnnouncement("Eliminado. Agora voce esta em espectador.", theme.DangerColor, 4)
+        showAnnouncement(Config.UI.Hints.Spectating, theme.DangerColor, 4)
     else
-        showAnnouncement(string.format("Respawn em %ds", payload.RespawnIn or 0), theme.WarningColor, 3)
+        showAnnouncement(string.format("%s Respawn em %ds", Config.UI.Hints.RespawnActive, payload.RespawnIn or 0), theme.WarningColor, 3)
     end
     updatePhaseVisibility()
 end)
@@ -557,9 +647,22 @@ remotes.FeedbackPushed.OnClientEvent:Connect(function(payload)
     if payload.Type == "ResourceCollected" and payload.ResourceType and resourceLabels[payload.ResourceType] then
         pulse(resourceLabels[payload.ResourceType].Frame, theme.SuccessColor)
         playConfiguredSound(Config.Audio.PickupSoundId)
+        if not seenFeedbackHints[payload.ResourceType] then
+            seenFeedbackHints[payload.ResourceType] = true
+            local hintByResource = {
+                Iron = Config.UI.Hints.FirstIron,
+                Gold = Config.UI.Hints.FirstGold,
+                Emerald = Config.UI.Hints.FirstEmerald,
+            }
+            showAnnouncement(hintByResource[payload.ResourceType] or "", theme.AccentColor, 3)
+        end
     elseif payload.Type == "PurchaseSuccess" then
         pulse(shopFrame, theme.SuccessColor)
         playConfiguredSound(Config.Audio.PurchaseSoundId)
+        if payload.ItemId == Config.UI.StarterRecommendations.PickaxeItemId and not seenFeedbackHints.FirstPickaxe then
+            seenFeedbackHints.FirstPickaxe = true
+            showAnnouncement(Config.UI.Hints.FirstPickaxe, theme.AccentColor, 4)
+        end
     elseif payload.Type == "PurchaseDenied" then
         pulse(shopFrame, theme.DangerColor)
         playConfiguredSound(Config.Audio.ErrorSoundId)
@@ -571,7 +674,7 @@ remotes.FeedbackPushed.OnClientEvent:Connect(function(payload)
         showAnnouncement("Nucleo sob ataque", theme.WarningColor, 2.5)
         playConfiguredSound(Config.Audio.CoreHitSoundId)
     elseif payload.Type == "CoreDestroyed" then
-        showAnnouncement("Nucleo destruido", theme.DangerColor, 4)
+        showAnnouncement(Config.UI.Hints.CoreDestroyed, theme.DangerColor, 4)
         playConfiguredSound(Config.Audio.CoreBreakSoundId)
     end
 end)

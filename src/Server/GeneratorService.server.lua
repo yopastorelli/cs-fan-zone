@@ -103,6 +103,11 @@ local function generatorLoop(generatorPart)
             break
         end
 
+        local teamId = generatorPart:GetAttribute("TeamId")
+        if teamId and not ArenaState.IsTeamActive(teamId) then
+            continue
+        end
+
         if countPickupsNear(generatorPart, generatorType.ResourceType) < Config.Generators.MaxPickupsPerGenerator then
             createPickup(generatorPart, generatorTypeName)
         end

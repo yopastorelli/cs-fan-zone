@@ -10,13 +10,16 @@
 1. `Workspace.CSFanZone` existe
 2. jogador sozinho nasce no `LobbySpawn`, no chao, sem plataforma aerea inicial
 3. em ate 10s o HUD deixa claro objetivo, fila minima e proximo passo
+4. com poucos jogadores, o HUD deixa claro o formato adaptativo previsto da proxima rodada
 4. card de ajuda no lobby pode ser fechado e reaberto por botao `Ajuda`
 5. o lobby mostra vista clara da arena, centro e 6 bases: Planicie, Deserto, Taiga, Selva, Neve, Cogumelos
 6. no primeiro frame nao existem labels gigantes sobrepostas de loja, upgrades ou rota
 6. ao iniciar contagem, aparece countdown central e aviso de dupla automatica
 7. em partida, HUD mostra estado, timer, recursos e placar de duplas
+8. ao nascer na base, aparecem highlights temporarios para nucleo, loja, upgrades, ferro e ouro
 8. geradores soltam pickups de recurso com labels legiveis
 9. loja abre por prompt e compra funciona
+10. loja destaca compras iniciais de blocos/espada e papel da picareta
 10. upgrades abrem por prompt e aplicam na dupla
 11. espada causa dano em inimigo
 12. picareta danifica nucleo inimigo
@@ -26,6 +29,7 @@
 16. se todas as duplas morrerem apos `SuddenDeath`, a rodada encerra como empate
 17. ultima dupla viva vence
 18. nao e possivel comprar, melhorar ou colocar bloco no lobby/spectator
+19. com 4/6/8/10/12 jogadores, o numero de duplas ativas acompanha a populacao esperada
 
 ## VISUAL_QA
 1. screenshot inicial do lobby nao parece vazio

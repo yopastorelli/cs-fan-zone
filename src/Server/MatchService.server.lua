@@ -52,14 +52,29 @@ local function beginRound(players)
     clearRoundDebris()
     clearInventories()
     ArenaState.ResetRoundState()
-    ArenaState.AssignPlayersToTeams(players)
+    local assignedPlayers = ArenaState.AssignPlayersToTeams(players)
     ArenaState.SetMatchResult("Reset", nil)
     ArenaState.SetMatchState("Active", Config.Match.SuddenDeathSeconds)
     ArenaState.PushAnnouncement("Rodada iniciada. Protejam o nucleo e avancem pelo centro.", "Accent")
 
-    for _, player in ipairs(players) do
+    for _, player in ipairs(assignedPlayers) do
         ArenaState.ApplyRespawnLocation(player)
         player:LoadCharacter()
+    end
+
+    for _, player in ipairs(players) do
+        local assigned = false
+        for _, selectedPlayer in ipairs(assignedPlayers) do
+            if selectedPlayer == player then
+                assigned = true
+                break
+            end
+        end
+        if not assigned then
+            ArenaState.PushFeedback(player, "PurchaseDenied", {
+                Message = "Voce ficou no lobby para completar duplas na proxima rodada.",
+            })
+        end
     end
 
     task.delay(Config.Match.SuddenDeathSeconds, function()
@@ -91,6 +106,7 @@ local function matchLoop()
 
         if ArenaState.MatchState == "Waiting" then
             local eligible = ArenaState.GetEligiblePlayers()
+            ArenaState.SetProjectedActiveTeams(#eligible)
             if #eligible >= Config.Match.MinPlayersToStart then
                 ArenaState.SetMatchResult("Reset", nil)
                 ArenaState.SetMatchState("Starting", Config.Match.CountdownSeconds)
@@ -100,6 +116,7 @@ local function matchLoop()
             end
         elseif ArenaState.MatchState == "Starting" then
             local eligible = ArenaState.GetEligiblePlayers()
+            ArenaState.SetProjectedActiveTeams(#eligible)
             local secondsLeft = ArenaState.StateEndsAt - os.time()
             if #eligible < Config.Match.MinPlayersToStart then
                 ArenaState.SetMatchResult("Reset", nil)
