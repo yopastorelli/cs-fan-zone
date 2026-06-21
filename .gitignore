@@ -1,0 +1,5 @@
+*.rbxl
+*.rbxlx
+*.rbxmx
+*.log
+.DS_Store
