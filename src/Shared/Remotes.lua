@@ -4,11 +4,10 @@ local RunService = game:GetService("RunService")
 local REMOTE_FOLDER_NAME = "CSFanZoneRemotes"
 
 local RemoteNames = {
-    RequestTeleport = "RequestTeleport",
-    RequestPurchase = "RequestPurchase",
-    RequestEquip = "RequestEquip",
-    RoundStateUpdated = "RoundStateUpdated",
-    ShopStateUpdated = "ShopStateUpdated",
+    CollectibleCollected = "CollectibleCollected",
+    PoiActivated = "PoiActivated",
+    MissionStateUpdated = "MissionStateUpdated",
+    FinalRoomUnlocked = "FinalRoomUnlocked",
 }
 
 local function ensureFolder()
