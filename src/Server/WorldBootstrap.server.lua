@@ -27,6 +27,13 @@ local function ensureWorldRoot()
     return root
 end
 
+local function makeFolder(parent, name)
+    local folder = Instance.new("Folder")
+    folder.Name = name
+    folder.Parent = parent
+    return folder
+end
+
 local function makePart(parent, name, size, cframe, color, material)
     local part = Instance.new("Part")
     part.Name = name
@@ -41,408 +48,316 @@ local function makePart(parent, name, size, cframe, color, material)
     return part
 end
 
-local function makeLabelPart(parent, name, size, cframe, surface, text, textColor, backgroundColor)
-    local part = makePart(parent, name, size, cframe, backgroundColor, Enum.Material.Neon)
-    part.CanCollide = false
-
+local function addSurfaceText(part, face, text, textColor)
     local gui = Instance.new("SurfaceGui")
     gui.Name = "SurfaceGui"
-    gui.Face = surface
+    gui.Face = face
     gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-    gui.PixelsPerStud = 40
+    gui.PixelsPerStud = 38
     gui.Parent = part
 
     local label = Instance.new("TextLabel")
     label.Name = "TextLabel"
     label.Size = UDim2.fromScale(1, 1)
     label.BackgroundTransparency = 1
-    label.Text = text
     label.Font = Enum.Font.GothamBold
+    label.Text = text
+    label.TextColor3 = textColor or Config.UI.Theme.TextColor
     label.TextScaled = true
-    label.TextColor3 = textColor
+    label.TextWrapped = true
     label.Parent = gui
 
-    return part, label
+    return label
+end
+
+local function addBillboard(part, text, color)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "Billboard"
+    billboard.Size = UDim2.fromOffset(170, 48)
+    billboard.StudsOffset = Vector3.new(0, 4, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = part
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.fromScale(1, 1)
+    label.BackgroundColor3 = Config.UI.Theme.PanelColor
+    label.BackgroundTransparency = 0.12
+    label.Font = Enum.Font.GothamBold
+    label.Text = text
+    label.TextColor3 = color or Config.UI.Theme.TextColor
+    label.TextScaled = true
+    label.TextWrapped = true
+    label.Parent = billboard
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = label
+end
+
+local function addPrompt(parent, name, actionText, objectText)
+    local prompt = Instance.new("ProximityPrompt")
+    prompt.Name = name
+    prompt.ActionText = actionText
+    prompt.ObjectText = objectText
+    prompt.KeyboardKeyCode = Enum.KeyCode.E
+    prompt.MaxActivationDistance = 12
+    prompt.RequiresLineOfSight = false
+    prompt.Parent = parent
+    return prompt
+end
+
+local function makeZone(root, area)
+    local folder = makeFolder(root, area.Name)
+
+    makePart(
+        folder,
+        "Floor",
+        area.Size,
+        CFrame.new(area.Position + Vector3.new(0, -1, 0)),
+        Color3.fromRGB(28, 34, 46),
+        Enum.Material.Concrete
+    )
+
+    local sign = makePart(
+        folder,
+        "ZoneSign",
+        Vector3.new(28, 9, 1),
+        CFrame.new(area.Position + Vector3.new(0, 10, -((area.Size.Z / 2) - 8))),
+        area.AccentColor,
+        Enum.Material.Neon
+    )
+    sign.CanCollide = false
+    addSurfaceText(sign, Enum.NormalId.Front, area.DisplayName, Config.UI.Theme.TextColor)
+
+    return folder
+end
+
+local function makePath(parent, startPosition, endPosition, color)
+    local midpoint = (startPosition + endPosition) / 2
+    local distance = (endPosition - startPosition).Magnitude
+    local path = makePart(
+        parent,
+        "Path",
+        Vector3.new(10, 1, distance),
+        CFrame.lookAt(midpoint + Vector3.new(0, 0.08, 0), endPosition),
+        color,
+        Enum.Material.Neon
+    )
+    path.Transparency = 0.45
+    path.CanCollide = false
 end
 
 local function makeTree(parent, position)
-    local trunk = makePart(
+    makePart(
         parent,
         "TreeTrunk",
-        Vector3.new(2, 12, 2),
-        CFrame.new(position + Vector3.new(0, 6, 0)),
-        Color3.fromRGB(99, 62, 34),
+        Vector3.new(2, 9, 2),
+        CFrame.new(position + Vector3.new(0, 4.5, 0)),
+        Color3.fromRGB(92, 58, 35),
         Enum.Material.Wood
     )
-    trunk.CanCollide = true
 
-    for _, offset in ipairs({
-        Vector3.new(0, 14, 0),
-        Vector3.new(4, 12, 0),
-        Vector3.new(-4, 12, 0),
-        Vector3.new(0, 12, 4),
-    }) do
-        local leaf = Instance.new("Part")
-        leaf.Name = "Leaf"
-        leaf.Shape = Enum.PartType.Ball
-        leaf.Size = Vector3.new(7, 7, 7)
-        leaf.CFrame = CFrame.new(position + offset)
-        leaf.Anchored = true
-        leaf.Color = Color3.fromRGB(60, 178, 93)
-        leaf.Material = Enum.Material.Grass
-        leaf.Parent = parent
-    end
+    local leaves = Instance.new("Part")
+    leaves.Name = "TreeLeaves"
+    leaves.Shape = Enum.PartType.Ball
+    leaves.Size = Vector3.new(9, 9, 9)
+    leaves.CFrame = CFrame.new(position + Vector3.new(0, 11, 0))
+    leaves.Anchored = true
+    leaves.Color = Color3.fromRGB(78, 190, 112)
+    leaves.Material = Enum.Material.Grass
+    leaves.Parent = parent
 end
 
-local function getSortedShopItemNames()
-    local names = {}
-    for itemName in pairs(Config.ShopItems) do
-        names[#names + 1] = itemName
+local function makeSeat(parent, name, position, color)
+    makePart(parent, name .. "Base", Vector3.new(10, 2, 6), CFrame.new(position), color, Enum.Material.SmoothPlastic)
+    makePart(parent, name .. "Back", Vector3.new(10, 7, 1), CFrame.new(position + Vector3.new(0, 4, 3)), color, Enum.Material.SmoothPlastic)
+end
+
+local function makeCollectible(root, collectible)
+    local folder = root:FindFirstChild(collectible.Area)
+    if not folder then
+        return
     end
 
-    table.sort(names)
-    return names
+    local part = Instance.new("Part")
+    part.Name = collectible.Id
+    part.Shape = Enum.PartType.Ball
+    part.Size = Vector3.new(4, 4, 4)
+    part.CFrame = CFrame.new(collectible.Position)
+    part.Anchored = true
+    part.Color = collectible.Color
+    part.Material = Enum.Material.Neon
+    part:SetAttribute("CollectibleId", collectible.Id)
+    part.Parent = folder
+
+    local light = Instance.new("PointLight")
+    light.Name = "Glow"
+    light.Color = collectible.Color
+    light.Brightness = 1.8
+    light.Range = 14
+    light.Parent = part
+
+    addBillboard(part, collectible.DisplayName, collectible.Color)
+    addPrompt(part, "CollectPrompt", "Registrar", collectible.DisplayName)
+end
+
+local function makePOI(root, poi)
+    local folder = root:FindFirstChild(poi.Area)
+    if not folder then
+        return
+    end
+
+    local panel = makePart(
+        folder,
+        poi.Id,
+        Vector3.new(18, 12, 2),
+        CFrame.new(poi.Position),
+        Config.Areas[poi.Area].AccentColor,
+        Enum.Material.Neon
+    )
+    panel:SetAttribute("PoiId", poi.Id)
+    addSurfaceText(panel, Enum.NormalId.Front, poi.DisplayName .. "\n\nPressione E", Config.UI.Theme.TextColor)
+    addPrompt(panel, "PoiPrompt", poi.PromptText, poi.DisplayName)
 end
 
 local worldRoot = ensureWorldRoot()
 
-local hubFolder = Instance.new("Folder")
-hubFolder.Name = Config.Areas.Hub.Name
-hubFolder.Parent = worldRoot
+for _, areaName in ipairs({
+    "CentralPlaza",
+    "NostalgiaWall",
+    "ClipStage",
+    "MemeLounge",
+    "FinalCelebrationRoom",
+}) do
+    makeZone(worldRoot, Config.Areas[areaName])
+end
 
-local hubFloor = makePart(
-    hubFolder,
-    "HubFloor",
-    Vector3.new(90, 2, 90),
-    CFrame.new(Config.Areas.Hub.Position + Vector3.new(0, -1, 0)),
-    Color3.fromRGB(24, 34, 56),
-    Enum.Material.Concrete
-)
+local center = Config.Areas.CentralPlaza.Position
+makePath(worldRoot.CentralPlaza, center + Vector3.new(-45, 0, 0), Config.Areas.NostalgiaWall.Position + Vector3.new(34, 0, 0), Config.Areas.NostalgiaWall.AccentColor)
+makePath(worldRoot.CentralPlaza, center + Vector3.new(0, 0, 45), Config.Areas.ClipStage.Position + Vector3.new(0, 0, -34), Config.Areas.ClipStage.AccentColor)
+makePath(worldRoot.CentralPlaza, center + Vector3.new(45, 0, 0), Config.Areas.MemeLounge.Position + Vector3.new(-34, 0, 0), Config.Areas.MemeLounge.AccentColor)
+makePath(worldRoot.CentralPlaza, center + Vector3.new(0, 0, -45), Config.Areas.FinalCelebrationRoom.Position + Vector3.new(0, 0, 30), Config.Areas.FinalCelebrationRoom.AccentColor)
 
 local spawn = Instance.new("SpawnLocation")
 spawn.Name = "Spawn"
-spawn.Size = Vector3.new(8, 1, 8)
-spawn.CFrame = CFrame.new(Config.Areas.Hub.Position + Vector3.new(0, 1, 0))
+spawn.Size = Vector3.new(10, 1, 10)
+spawn.CFrame = CFrame.new(center + Vector3.new(0, 1, 0))
 spawn.Anchored = true
 spawn.Neutral = true
-spawn.Color = Config.Areas.Hub.AccentColor
+spawn.Color = Config.Areas.CentralPlaza.AccentColor
 spawn.Material = Enum.Material.Neon
-spawn.Parent = hubFolder
+spawn.Parent = worldRoot.CentralPlaza
 
-makeLabelPart(
-    hubFolder,
-    "HubSign",
-    Vector3.new(30, 10, 1),
-    CFrame.new(Config.Areas.Hub.Position + Vector3.new(0, 12, -25)),
-    Enum.NormalId.Front,
-    "CS Fan Zone",
-    Config.UI.Theme.TextColor,
-    Config.Areas.Hub.AccentColor
+local titleSign = makePart(
+    worldRoot.CentralPlaza,
+    "MainObjectiveSign",
+    Vector3.new(38, 12, 1),
+    CFrame.new(center + Vector3.new(0, 13, -30)),
+    Config.Areas.CentralPlaza.AccentColor,
+    Enum.Material.Neon
 )
-
-local lounge = makePart(
-    hubFolder,
-    "SocialLounge",
-    Vector3.new(22, 1, 16),
-    CFrame.new(Config.Areas.Hub.Position + Vector3.new(0, 0.5, 24)),
-    Color3.fromRGB(34, 46, 74),
-    Enum.Material.SmoothPlastic
-)
-    lounge.CanCollide = true
+titleSign.CanCollide = false
+addSurfaceText(titleSign, Enum.NormalId.Front, "CS Fan Zone\n" .. Config.Mission.ObjectiveText, Config.UI.Theme.TextColor)
 
 for _, offset in ipairs({
-    Vector3.new(26, 0, 26),
-    Vector3.new(-26, 0, 26),
-    Vector3.new(26, 0, -26),
-    Vector3.new(-26, 0, -26),
+    Vector3.new(-34, 0, -34),
+    Vector3.new(34, 0, -34),
+    Vector3.new(-34, 0, 34),
+    Vector3.new(34, 0, 34),
 }) do
-    makeTree(hubFolder, Config.Areas.Hub.Position + offset)
+    makeTree(worldRoot.CentralPlaza, center + offset)
 end
 
-local portalsFolder = Instance.new("Folder")
-portalsFolder.Name = Config.Areas.Portals.Name
-portalsFolder.Parent = worldRoot
+for index = 1, 5 do
+    local panel = makePart(
+        worldRoot.NostalgiaWall,
+        "MemoryPanel" .. index,
+        Vector3.new(10, 10, 1),
+        CFrame.new(Config.Areas.NostalgiaWall.Position + Vector3.new(-30 + (index * 10), 6, -30)),
+        Color3.fromRGB(48, 38, 62),
+        Enum.Material.SmoothPlastic
+    )
+    addSurfaceText(panel, Enum.NormalId.Front, "Historia\noriginal\n#" .. index, Config.Areas.NostalgiaWall.AccentColor)
+end
 
-local portalDefinitions = {
-    { Name = "Arena", Position = Vector3.new(0, 5, 38), Color = Config.Areas.Arena.AccentColor },
-    { Name = "Parkour", Position = Vector3.new(-38, 5, 0), Color = Config.Areas.Parkour.AccentColor },
-    { Name = "Shop", Position = Vector3.new(38, 5, 0), Color = Config.Areas.Shop.AccentColor },
-    { Name = "Leaderboard", Position = Vector3.new(0, 5, -38), Color = Config.Areas.Leaderboard.AccentColor },
-}
+local stageBase = makePart(
+    worldRoot.ClipStage,
+    "StageBase",
+    Vector3.new(50, 6, 24),
+    CFrame.new(Config.Areas.ClipStage.Position + Vector3.new(0, 3, 18)),
+    Color3.fromRGB(44, 28, 50),
+    Enum.Material.SmoothPlastic
+)
+stageBase.CanCollide = true
 
-for _, definition in ipairs(portalDefinitions) do
-    local portal = makePart(
-        portalsFolder,
-        definition.Name .. "Portal",
-        Vector3.new(10, 12, 2),
-        CFrame.new(definition.Position),
-        definition.Color,
+for _, x in ipairs({ -24, -8, 8, 24 }) do
+    local lightTower = makePart(
+        worldRoot.ClipStage,
+        "StageLight",
+        Vector3.new(3, 20, 3),
+        CFrame.new(Config.Areas.ClipStage.Position + Vector3.new(x, 10, -20)),
+        Config.Areas.ClipStage.AccentColor,
         Enum.Material.Neon
     )
-    portal.Transparency = 0.15
-    portal.CanCollide = false
-    portal:SetAttribute("TargetArea", definition.Name)
-
-    local prompt = Instance.new("ProximityPrompt")
-    prompt.Name = "PortalPrompt"
-    prompt.ActionText = "Viajar"
-    prompt.ObjectText = definition.Name
-    prompt.KeyboardKeyCode = Enum.KeyCode.E
-    prompt.MaxActivationDistance = 12
-    prompt.RequiresLineOfSight = false
-    prompt.Parent = portal
-
-    local tag = Instance.new("BillboardGui")
-    tag.Name = "PortalBillboard"
-    tag.Size = UDim2.fromOffset(180, 50)
-    tag.StudsOffset = Vector3.new(0, 8, 0)
-    tag.AlwaysOnTop = true
-    tag.Parent = portal
-
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.fromScale(1, 1)
-    textLabel.BackgroundTransparency = 0.2
-    textLabel.BackgroundColor3 = Color3.fromRGB(18, 22, 36)
-    textLabel.Text = definition.Name
-    textLabel.TextScaled = true
-    textLabel.Font = Enum.Font.GothamBold
-    textLabel.TextColor3 = Config.UI.Theme.TextColor
-    textLabel.Parent = tag
+    lightTower.CanCollide = true
 end
 
-local arenaFolder = Instance.new("Folder")
-arenaFolder.Name = Config.Areas.Arena.Name
-arenaFolder.Parent = worldRoot
+makeSeat(worldRoot.MemeLounge, "LeftCouch", Config.Areas.MemeLounge.Position + Vector3.new(-18, 1, 18), Color3.fromRGB(45, 72, 54))
+makeSeat(worldRoot.MemeLounge, "RightCouch", Config.Areas.MemeLounge.Position + Vector3.new(18, 1, 18), Color3.fromRGB(45, 72, 54))
 
-makePart(
-    arenaFolder,
-    "ArenaFloor",
-    Vector3.new(70, 2, 70),
-    CFrame.new(Config.Areas.Arena.Position + Vector3.new(0, -1, 0)),
-    Color3.fromRGB(54, 44, 24),
-    Enum.Material.Slate
-)
+for index = 1, 4 do
+    local cube = makePart(
+        worldRoot.MemeLounge,
+        "OriginalMemeCube" .. index,
+        Vector3.new(7, 7, 7),
+        CFrame.new(Config.Areas.MemeLounge.Position + Vector3.new(-24 + (index * 12), 4, -6)),
+        Color3.fromRGB(70, 130 + (index * 20), 110),
+        Enum.Material.Neon
+    )
+    cube.CanCollide = true
+end
 
-local arenaRing = makePart(
-    arenaFolder,
-    "ArenaRing",
-    Vector3.new(76, 6, 76),
-    CFrame.new(Config.Areas.Arena.Position + Vector3.new(0, 2, 0)),
-    Config.Areas.Arena.AccentColor,
+local finalGate = makePart(
+    worldRoot.FinalCelebrationRoom,
+    "FinalGate",
+    Vector3.new(36, 18, 2),
+    CFrame.new(Config.Areas.FinalCelebrationRoom.Position + Vector3.new(0, 8, 28)),
+    Color3.fromRGB(80, 70, 120),
     Enum.Material.ForceField
 )
-arenaRing.Shape = Enum.PartType.Cylinder
-arenaRing.Orientation = Vector3.new(0, 0, 90)
-arenaRing.Transparency = 0.75
-arenaRing.CanCollide = false
+finalGate.Transparency = 0.25
+finalGate.CanCollide = true
+finalGate:SetAttribute("Unlocked", false)
+addSurfaceText(finalGate, Enum.NormalId.Front, "Sala Final\nBloqueada", Config.UI.Theme.TextColor)
 
-local arenaSpawn = makePart(
-    arenaFolder,
-    "Spawn",
-    Vector3.new(8, 1, 8),
-    CFrame.new(Config.Areas.Arena.Position + Vector3.new(0, 1, 0)),
-    Config.Areas.Arena.AccentColor,
+local celebrationSign = makePart(
+    worldRoot.FinalCelebrationRoom,
+    "CelebrationSign",
+    Vector3.new(36, 12, 1),
+    CFrame.new(Config.Areas.FinalCelebrationRoom.Position + Vector3.new(0, 12, -18)),
+    Config.Areas.FinalCelebrationRoom.AccentColor,
     Enum.Material.Neon
 )
-arenaSpawn.Transparency = 1
-arenaSpawn.CanCollide = false
+celebrationSign.CanCollide = false
+addSurfaceText(celebrationSign, Enum.NormalId.Front, "Celebracao final\nVoce completou o circuito!", Config.UI.Theme.TextColor)
 
-local coinCenter = makePart(
-    arenaFolder,
-    "CoinCenter",
-    Vector3.new(2, 2, 2),
-    CFrame.new(Config.Areas.Arena.Position + Vector3.new(0, Config.Coin.Height, 0)),
-    Config.Coin.Color,
-    Enum.Material.Neon
-)
-coinCenter.Transparency = 1
-coinCenter.CanCollide = false
-
-makeLabelPart(
-    arenaFolder,
-    "ArenaSign",
-    Vector3.new(20, 8, 1),
-    CFrame.new(Config.Areas.Arena.Position + Vector3.new(0, 10, -20)),
-    Enum.NormalId.Front,
-    "Coleta de moedas",
-    Config.UI.Theme.TextColor,
-    Config.Areas.Arena.AccentColor
-)
-
-local parkourFolder = Instance.new("Folder")
-parkourFolder.Name = Config.Areas.Parkour.Name
-parkourFolder.Parent = worldRoot
-
-makePart(
-    parkourFolder,
-    "ParkourBase",
-    Vector3.new(24, 2, 60),
-    CFrame.new(Config.Areas.Parkour.Position + Vector3.new(0, -1, 0)),
-    Color3.fromRGB(25, 40, 25),
-    Enum.Material.Grass
-)
-
-local parkourSpawn = makePart(
-    parkourFolder,
-    "Spawn",
-    Vector3.new(8, 1, 8),
-    CFrame.new(Config.Areas.Parkour.Position + Vector3.new(0, 1, -24)),
-    Config.Areas.Parkour.AccentColor,
-    Enum.Material.Neon
-)
-parkourSpawn.Transparency = 1
-parkourSpawn.CanCollide = false
-
-for stepIndex = 1, 8 do
-    local xOffset = (stepIndex % 2 == 0) and 6 or -6
-    makePart(
-        parkourFolder,
-        "Step" .. stepIndex,
-        Vector3.new(8, 2, 8),
-        CFrame.new(Config.Areas.Parkour.Position + Vector3.new(xOffset, 2 + stepIndex, -18 + (stepIndex * 8))),
-        Config.Areas.Parkour.AccentColor,
-        Enum.Material.Neon
-    )
+for index = 1, 12 do
+    local angle = (math.pi * 2 / 12) * index
+    local burst = Instance.new("Part")
+    burst.Name = "CelebrationBurst" .. index
+    burst.Shape = Enum.PartType.Ball
+    burst.Size = Vector3.new(2, 2, 2)
+    burst.CFrame = CFrame.new(Config.Areas.FinalCelebrationRoom.Position + Vector3.new(math.cos(angle) * 20, 10 + (index % 4), math.sin(angle) * 16))
+    burst.Anchored = true
+    burst.Color = Config.Areas.FinalCelebrationRoom.AccentColor
+    burst.Material = Enum.Material.Neon
+    burst.Parent = worldRoot.FinalCelebrationRoom
 end
 
-makeLabelPart(
-    parkourFolder,
-    "ParkourSign",
-    Vector3.new(18, 7, 1),
-    CFrame.new(Config.Areas.Parkour.Position + Vector3.new(0, 12, -28)),
-    Enum.NormalId.Front,
-    "Desafio Parkour",
-    Config.UI.Theme.TextColor,
-    Config.Areas.Parkour.AccentColor
-)
-
-local shopFolder = Instance.new("Folder")
-shopFolder.Name = Config.Areas.Shop.Name
-shopFolder.Parent = worldRoot
-
-makePart(
-    shopFolder,
-    "ShopFloor",
-    Vector3.new(42, 2, 42),
-    CFrame.new(Config.Areas.Shop.Position + Vector3.new(0, -1, 0)),
-    Color3.fromRGB(40, 24, 40),
-    Enum.Material.Marble
-)
-
-local shopSpawn = makePart(
-    shopFolder,
-    "Spawn",
-    Vector3.new(8, 1, 8),
-    CFrame.new(Config.Areas.Shop.Position + Vector3.new(0, 1, 14)),
-    Config.Areas.Shop.AccentColor,
-    Enum.Material.Neon
-)
-shopSpawn.Transparency = 1
-shopSpawn.CanCollide = false
-
-makeLabelPart(
-    shopFolder,
-    "ShopSign",
-    Vector3.new(18, 7, 1),
-    CFrame.new(Config.Areas.Shop.Position + Vector3.new(0, 12, -12)),
-    Enum.NormalId.Front,
-    "Loja Cosmetica",
-    Config.UI.Theme.TextColor,
-    Config.Areas.Shop.AccentColor
-)
-
-local kiosk = makePart(
-    shopFolder,
-    "Kiosk",
-    Vector3.new(24, 10, 10),
-    CFrame.new(Config.Areas.Shop.Position + Vector3.new(0, 5, -2)),
-    Color3.fromRGB(62, 35, 65),
-    Enum.Material.SmoothPlastic
-)
-kiosk.CanCollide = true
-
-local itemIndex = 0
-for _, itemName in ipairs(getSortedShopItemNames()) do
-    local item = Config.ShopItems[itemName]
-    itemIndex += 1
-    local standOffset = -10 + (itemIndex * 10)
-    local stand = makePart(
-        shopFolder,
-        itemName .. "Stand",
-        Vector3.new(6, 6, 6),
-        CFrame.new(Config.Areas.Shop.Position + Vector3.new(standOffset, 3, 10)),
-        item.TintColor,
-        Enum.Material.Neon
-    )
-    stand.CanCollide = true
-
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "ItemBillboard"
-    billboard.Size = UDim2.fromOffset(180, 60)
-    billboard.StudsOffset = Vector3.new(0, 5, 0)
-    billboard.AlwaysOnTop = true
-    billboard.Parent = stand
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.fromScale(1, 1)
-    label.BackgroundColor3 = Color3.fromRGB(18, 22, 36)
-    label.BackgroundTransparency = 0.2
-    label.Text = string.format("%s\n%d coins", item.DisplayName, item.Price)
-    label.TextScaled = true
-    label.Font = Enum.Font.GothamBold
-    label.TextColor3 = Config.UI.Theme.TextColor
-    label.Parent = billboard
+for _, collectible in ipairs(Config.Collectibles) do
+    makeCollectible(worldRoot, collectible)
 end
 
-local leaderboardFolder = Instance.new("Folder")
-leaderboardFolder.Name = Config.Areas.Leaderboard.Name
-leaderboardFolder.Parent = worldRoot
-
-makePart(
-    leaderboardFolder,
-    "LeaderboardFloor",
-    Vector3.new(38, 2, 38),
-    CFrame.new(Config.Areas.Leaderboard.Position + Vector3.new(0, -1, 0)),
-    Color3.fromRGB(26, 20, 44),
-    Enum.Material.SmoothPlastic
-)
-
-local leaderboardSpawn = makePart(
-    leaderboardFolder,
-    "Spawn",
-    Vector3.new(8, 1, 8),
-    CFrame.new(Config.Areas.Leaderboard.Position + Vector3.new(0, 1, 12)),
-    Config.Areas.Leaderboard.AccentColor,
-    Enum.Material.Neon
-)
-leaderboardSpawn.Transparency = 1
-leaderboardSpawn.CanCollide = false
-
-local boardPart, boardLabel = makeLabelPart(
-    leaderboardFolder,
-    "TopCoinsBoard",
-    Vector3.new(18, 12, 1),
-    CFrame.new(Config.Areas.Leaderboard.Position + Vector3.new(0, 8, -8)),
-    Enum.NormalId.Front,
-    "Top Coins\nAguardando jogadores...",
-    Config.UI.Theme.TextColor,
-    Config.Areas.Leaderboard.AccentColor
-)
-boardLabel.Name = "TopCoinsLabel"
-
-local podium = makePart(
-    leaderboardFolder,
-    "Podium",
-    Vector3.new(18, 3, 8),
-    CFrame.new(Config.Areas.Leaderboard.Position + Vector3.new(0, 1.5, 10)),
-    Config.Areas.Leaderboard.AccentColor,
-    Enum.Material.Neon
-)
-podium.CanCollide = true
-
-local ambient = Instance.new("Sound")
-ambient.Name = "AmbientLoop"
-ambient.SoundId = Config.Audio.RoundStartSoundId
-ambient.Volume = 0.15
-ambient.Looped = true
-ambient.Parent = hubFloor
+for _, poi in ipairs(Config.POIs) do
+    makePOI(worldRoot, poi)
+end
