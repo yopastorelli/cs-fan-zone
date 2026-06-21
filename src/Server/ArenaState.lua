@@ -72,6 +72,21 @@ local function getTeamById(teamId)
     return ArenaState.Teams[teamId]
 end
 
+local function updateCoreStatusVisual(corePart, text)
+    local status = corePart:FindFirstChild("CoreStatus")
+    local label = status and status:FindFirstChild("Label")
+    if label and label:IsA("TextLabel") then
+        label.Text = text
+    end
+
+    local plinth = corePart.Parent and corePart.Parent:FindFirstChild("CoreStatusPlinth")
+    local surfaceGui = plinth and plinth:FindFirstChild("SurfaceGui")
+    local surfaceLabel = surfaceGui and surfaceGui:FindFirstChild("TextLabel")
+    if surfaceLabel and surfaceLabel:IsA("TextLabel") then
+        surfaceLabel.Text = text
+    end
+end
+
 local function findTeamConfig(teamId)
     for _, teamConfig in ipairs(Config.Teams) do
         if teamConfig.Id == teamId then
@@ -545,13 +560,12 @@ function ArenaState.DamageCore(teamId, amount)
     if corePart then
         corePart:SetAttribute("CoreHealth", team.CoreHealth)
         corePart.Color = team.CoreHealth > 0 and team.Color:Lerp(Color3.new(1, 1, 1), 0.25) or Color3.fromRGB(75, 75, 75)
-        local status = corePart:FindFirstChild("CoreStatus")
-        local label = status and status:FindFirstChild("Label")
-        if label and label:IsA("TextLabel") then
-            label.Text = team.CoreHealth > 0
+        updateCoreStatusVisual(
+            corePart,
+            team.CoreHealth > 0
                 and string.format("Nucleo %d/%d", team.CoreHealth, Config.Match.MaxCoreHealth)
                 or "Nucleo destruido"
-        end
+        )
     end
 
     if team.CoreHealth <= 0 then

@@ -7,6 +7,21 @@ local Config = require(Shared:WaitForChild("Config"))
 
 local ArenaState = require(script.Parent:WaitForChild("ArenaState"))
 
+local function updateCoreStatusVisual(corePart, text)
+    local status = corePart:FindFirstChild("CoreStatus")
+    local label = status and status:FindFirstChild("Label")
+    if label and label:IsA("TextLabel") then
+        label.Text = text
+    end
+
+    local plinth = corePart.Parent and corePart.Parent:FindFirstChild("CoreStatusPlinth")
+    local surfaceGui = plinth and plinth:FindFirstChild("SurfaceGui")
+    local surfaceLabel = surfaceGui and surfaceGui:FindFirstChild("TextLabel")
+    if surfaceLabel and surfaceLabel:IsA("TextLabel") then
+        surfaceLabel.Text = text
+    end
+end
+
 local function clearRoundDebris()
     local world = Workspace:WaitForChild("CSFanZone")
     local generatorDrops = world:FindFirstChild("GeneratorDrops")
@@ -22,11 +37,7 @@ local function clearRoundDebris()
             local team = ArenaState.Teams[teamId]
             descendant.Color = team and team.Color or Color3.fromRGB(255, 255, 255)
             descendant:SetAttribute("CoreHealth", Config.Match.MaxCoreHealth)
-            local status = descendant:FindFirstChild("CoreStatus")
-            local label = status and status:FindFirstChild("Label")
-            if label and label:IsA("TextLabel") then
-                label.Text = string.format("Nucleo %d/%d", Config.Match.MaxCoreHealth, Config.Match.MaxCoreHealth)
-            end
+            updateCoreStatusVisual(descendant, string.format("Nucleo %d/%d", Config.Match.MaxCoreHealth, Config.Match.MaxCoreHealth))
         end
     end
 end

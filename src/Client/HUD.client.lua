@@ -33,9 +33,9 @@ local function updateScale()
     local camera = Workspace.CurrentCamera
     local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
     if viewport.X < 760 then
-        uiScale.Scale = 0.78
+        uiScale.Scale = 0.84
     elseif viewport.X < 1020 then
-        uiScale.Scale = 0.9
+        uiScale.Scale = 0.94
     else
         uiScale.Scale = 1
     end
@@ -115,12 +115,19 @@ local function getTeamDisplayName(teamId)
     return teamId or "Desconhecido"
 end
 
-local topBar = makeFrame(screenGui, "TopBar", UDim2.fromOffset(430, 64), UDim2.new(0.5, 0, 0, 14), Vector2.new(0.5, 0), theme.BackgroundColor, 0.03)
-makeLabel(topBar, "Title", Config.UI.Title, UDim2.new(1, -24, 0, 26), UDim2.fromOffset(12, 8), Enum.Font.GothamBold, 20, theme.TextColor, Enum.TextXAlignment.Center)
-local stateLabel = makeLabel(topBar, "State", Config.UI.QueueText, UDim2.new(0.5, -12, 0, 22), UDim2.fromOffset(12, 36), Enum.Font.GothamBold, 15, theme.WarningColor, Enum.TextXAlignment.Left)
-local timerLabel = makeLabel(topBar, "Timer", "Tempo: --", UDim2.new(0.5, -12, 0, 22), UDim2.new(0.5, 0, 0, 36), Enum.Font.GothamBold, 15, theme.WarningColor, Enum.TextXAlignment.Right)
+local topBar = makeFrame(screenGui, "TopBar", UDim2.fromOffset(520, 76), UDim2.new(0.5, 0, 0, 16), Vector2.new(0.5, 0), theme.BackgroundColor, 0.01)
+local topAccent = Instance.new("Frame")
+topAccent.Name = "TopAccent"
+topAccent.Size = UDim2.new(1, -20, 0, 3)
+topAccent.Position = UDim2.fromOffset(10, 10)
+topAccent.BackgroundColor3 = theme.AccentColor
+topAccent.BorderSizePixel = 0
+topAccent.Parent = topBar
+makeLabel(topBar, "Title", Config.UI.Title, UDim2.new(1, -24, 0, 28), UDim2.fromOffset(12, 12), Enum.Font.GothamBlack, 24, theme.TextColor, Enum.TextXAlignment.Center)
+local stateLabel = makeLabel(topBar, "State", Config.UI.QueueText, UDim2.new(0.5, -12, 0, 24), UDim2.fromOffset(12, 44), Enum.Font.GothamBold, 17, theme.WarningColor, Enum.TextXAlignment.Left)
+local timerLabel = makeLabel(topBar, "Timer", "Tempo: --", UDim2.new(0.5, -12, 0, 24), UDim2.new(0.5, 0, 0, 44), Enum.Font.GothamBold, 17, theme.WarningColor, Enum.TextXAlignment.Right)
 
-local leftPanel = makeFrame(screenGui, "TeamPanel", UDim2.fromOffset(260, 150), UDim2.new(0, 18, 0.5, -75), Vector2.new(0, 0), theme.BackgroundColor, 0.06)
+local leftPanel = makeFrame(screenGui, "TeamPanel", UDim2.fromOffset(300, 170), UDim2.new(0, 18, 0.5, -85), Vector2.new(0, 0), theme.BackgroundColor, 0.04)
 addPadding(leftPanel, 12)
 local leftLayout = Instance.new("UIListLayout")
 leftLayout.Padding = UDim.new(0, 8)
@@ -129,7 +136,7 @@ local teamLabel = makeLabel(leftPanel, "Team", "Time: Sem dupla", UDim2.new(1, 0
 local coreLabel = makeLabel(leftPanel, "Core", "Nucleo: --", UDim2.new(1, 0, 0, 24), nil, Enum.Font.GothamBold, 16, theme.MutedTextColor)
 local upgradeLabel = makeLabel(leftPanel, "Upgrades", "Upgrades: --", UDim2.new(1, 0, 0, 44), nil, Enum.Font.Gotham, 14, theme.MutedTextColor)
 
-local standingsPanel = makeFrame(screenGui, "StandingsPanel", UDim2.fromOffset(286, 220), UDim2.new(1, -18, 0.5, -110), Vector2.new(1, 0), theme.BackgroundColor, 0.06)
+local standingsPanel = makeFrame(screenGui, "StandingsPanel", UDim2.fromOffset(310, 252), UDim2.new(1, -18, 0.5, -126), Vector2.new(1, 0), theme.BackgroundColor, 0.04)
 addPadding(standingsPanel, 10)
 makeLabel(standingsPanel, "StandingsTitle", "Duplas", UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 0), Enum.Font.GothamBold, 18, theme.TextColor)
 local standingsList = Instance.new("Frame")
@@ -144,13 +151,13 @@ standingsLayout.Parent = standingsList
 
 local standingRows = {}
 for _ = 1, #Config.Teams do
-    local row = makeLabel(standingsList, "StandingRow", "-", UDim2.new(1, 0, 0, 22), nil, Enum.Font.GothamBold, 14, theme.MutedTextColor)
+    local row = makeLabel(standingsList, "StandingRow", "-", UDim2.new(1, 0, 0, 28), nil, Enum.Font.GothamBold, 15, theme.MutedTextColor)
     row.BackgroundColor3 = theme.PanelColor
     row.BackgroundTransparency = 0.32
     standingRows[#standingRows + 1] = row
 end
 
-local resourceBar = makeFrame(screenGui, "ResourceBar", UDim2.fromOffset(430, 58), UDim2.new(0.5, 0, 1, -22), Vector2.new(0.5, 1), theme.BackgroundColor, 0.05)
+local resourceBar = makeFrame(screenGui, "ResourceBar", UDim2.fromOffset(470, 64), UDim2.new(0.5, 0, 1, -22), Vector2.new(0.5, 1), theme.BackgroundColor, 0.03)
 addPadding(resourceBar, 8)
 local resourceLayout = Instance.new("UIListLayout")
 resourceLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -161,13 +168,14 @@ local resourceLabels = {}
 for _, resourceType in ipairs({ "Iron", "Gold", "Emerald" }) do
     local chip = makeFrame(resourceBar, resourceType .. "Chip", UDim2.new(1 / 3, -6, 1, 0), UDim2.fromScale(0, 0), Vector2.new(0, 0), theme.PanelColor, 0.04)
     chip.Parent = resourceBar
-    local label = makeLabel(chip, "Label", string.format("%s: 0", Config.UI.ResourceLabels[resourceType]), UDim2.fromScale(1, 1), UDim2.fromScale(0, 0), Enum.Font.GothamBlack, 16, theme.TextColor, Enum.TextXAlignment.Center)
+    local label = makeLabel(chip, "Label", string.format("%s: 0", Config.UI.ResourceLabels[resourceType]), UDim2.fromScale(1, 1), UDim2.fromScale(0, 0), Enum.Font.GothamBlack, 17, theme.TextColor, Enum.TextXAlignment.Center)
     resourceLabels[resourceType] = { Frame = chip, Label = label }
 end
 
-local onboardingCard = makeFrame(screenGui, "OnboardingCard", UDim2.fromOffset(360, 210), UDim2.new(0, 18, 0, 92), Vector2.new(0, 0), theme.BackgroundColor, 0.03)
+local onboardingCard = makeFrame(screenGui, "OnboardingCard", UDim2.fromOffset(390, 240), UDim2.new(0, 18, 0, 92), Vector2.new(0, 0), theme.BackgroundColor, 0.02)
 addPadding(onboardingCard, 16)
 makeLabel(onboardingCard, "OnboardingTitle", Config.UI.Onboarding.Title, UDim2.new(1, -94, 0, 28), UDim2.fromOffset(0, 0), Enum.Font.GothamBlack, 22, theme.TextColor, Enum.TextXAlignment.Left)
+local onboardingSubtitle = makeLabel(onboardingCard, "OnboardingSubtitle", "Entre, equipe sua dupla e avance pelo centro.", UDim2.new(1, 0, 0, 22), UDim2.fromOffset(0, 28), Enum.Font.GothamBold, 13, theme.MutedTextColor, Enum.TextXAlignment.Left)
 
 local onboardingClose = Instance.new("TextButton")
 onboardingClose.Name = "OnboardingClose"
@@ -183,10 +191,10 @@ local onboardingCloseCorner = Instance.new("UICorner")
 onboardingCloseCorner.CornerRadius = UDim.new(0, 8)
 onboardingCloseCorner.Parent = onboardingClose
 
-local queueLabel = makeLabel(onboardingCard, "Queue", "Fila: 0/0 jogadores", UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 34), Enum.Font.GothamBold, 16, theme.WarningColor, Enum.TextXAlignment.Left)
+local queueLabel = makeLabel(onboardingCard, "Queue", "Fila: 0/0 jogadores", UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 56), Enum.Font.GothamBold, 16, theme.WarningColor, Enum.TextXAlignment.Left)
 local objectiveRows = {}
 for index, objective in ipairs(Config.UI.Onboarding.Objectives) do
-    objectiveRows[index] = makeLabel(onboardingCard, "Objective" .. index, string.format("%d. %s", index, objective), UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 62 + ((index - 1) * 28)), Enum.Font.GothamBold, 14, theme.TextColor)
+    objectiveRows[index] = makeLabel(onboardingCard, "Objective" .. index, string.format("%d. %s", index, objective), UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 90 + ((index - 1) * 28)), Enum.Font.GothamBold, 14, theme.TextColor)
 end
 
 local helpToggle = Instance.new("TextButton")
@@ -204,17 +212,17 @@ local helpToggleCorner = Instance.new("UICorner")
 helpToggleCorner.CornerRadius = UDim.new(0, 8)
 helpToggleCorner.Parent = helpToggle
 
-local countdownCard = makeFrame(screenGui, "CountdownCard", UDim2.fromOffset(390, 170), UDim2.new(0.5, 0, 0.5, 0), Vector2.new(0.5, 0.5), theme.BackgroundColor, 0.02)
+local countdownCard = makeFrame(screenGui, "CountdownCard", UDim2.fromOffset(420, 186), UDim2.new(0.5, 0, 0.5, 0), Vector2.new(0.5, 0.5), theme.BackgroundColor, 0.01)
 local countdownTitle = makeLabel(countdownCard, "Title", "Partida iniciando", UDim2.new(1, -24, 0, 34), UDim2.fromOffset(12, 18), Enum.Font.GothamBlack, 25, theme.TextColor, Enum.TextXAlignment.Center)
 local countdownValue = makeLabel(countdownCard, "Value", "20", UDim2.new(1, -24, 0, 62), UDim2.fromOffset(12, 56), Enum.Font.GothamBlack, 48, theme.WarningColor, Enum.TextXAlignment.Center)
 makeLabel(countdownCard, "Body", Config.UI.Onboarding.StartingText, UDim2.new(1, -24, 0, 34), UDim2.fromOffset(12, 124), Enum.Font.GothamBold, 16, theme.MutedTextColor, Enum.TextXAlignment.Center)
 countdownCard.Visible = false
 
-local resultBanner = makeFrame(screenGui, "ResultBanner", UDim2.fromOffset(560, 94), UDim2.new(0.5, 0, 0.22, 0), Vector2.new(0.5, 0.5), theme.BackgroundColor, 0.02)
+local resultBanner = makeFrame(screenGui, "ResultBanner", UDim2.fromOffset(620, 108), UDim2.new(0.5, 0, 0.22, 0), Vector2.new(0.5, 0.5), theme.BackgroundColor, 0.01)
 local resultText = makeLabel(resultBanner, "ResultText", "", UDim2.new(1, -24, 1, -20), UDim2.fromOffset(12, 10), Enum.Font.GothamBlack, 26, theme.TextColor, Enum.TextXAlignment.Center)
 resultBanner.Visible = false
 
-local announcement = makeLabel(screenGui, "Announcement", "", UDim2.fromOffset(520, 44), UDim2.new(0.5, 0, 1, -92), Enum.Font.GothamBlack, 18, theme.TextColor, Enum.TextXAlignment.Center)
+local announcement = makeLabel(screenGui, "Announcement", "", UDim2.fromOffset(560, 48), UDim2.new(0.5, 0, 1, -100), Enum.Font.GothamBlack, 19, theme.TextColor, Enum.TextXAlignment.Center)
 announcement.AnchorPoint = Vector2.new(0.5, 1)
 announcement.BackgroundColor3 = theme.PanelColor
 announcement.BackgroundTransparency = 0.08
@@ -223,7 +231,7 @@ local announcementCorner = Instance.new("UICorner")
 announcementCorner.CornerRadius = UDim.new(0, 8)
 announcementCorner.Parent = announcement
 
-local shopFrame, shopStroke = makeFrame(screenGui, "ShopFrame", UDim2.fromOffset(540, 390), UDim2.new(0.5, 0, 0.5, 0), Vector2.new(0.5, 0.5), theme.BackgroundColor, 0.02)
+local shopFrame, shopStroke = makeFrame(screenGui, "ShopFrame", UDim2.fromOffset(620, 430), UDim2.new(0.5, 0, 0.5, 0), Vector2.new(0.5, 0.5), theme.BackgroundColor, 0.01)
 shopFrame.Visible = false
 addPadding(shopFrame, 14)
 makeLabel(shopFrame, "ShopTitle", "Loja", UDim2.new(1, -60, 0, 32), UDim2.fromOffset(0, 0), Enum.Font.GothamBlack, 24, theme.TextColor)
@@ -261,7 +269,7 @@ itemHolder.BackgroundTransparency = 1
 itemHolder.Parent = shopFrame
 local itemGrid = Instance.new("UIGridLayout")
 itemGrid.CellPadding = UDim2.fromOffset(8, 8)
-itemGrid.CellSize = UDim2.fromOffset(250, 72)
+itemGrid.CellSize = UDim2.fromOffset(286, 78)
 itemGrid.Parent = itemHolder
 
 local currentShopKind = "Items"
@@ -474,7 +482,7 @@ remotes.TeamStateUpdated.OnClientEvent:Connect(function(payload)
         if standing then
             row.Text = string.format("  %s | vivos %d | nucleo %s", standing.BiomeDisplayName, standing.AlivePlayers, standing.CoreAlive and "ON" or "OFF")
             row.TextColor3 = standing.Color or theme.TextColor
-            row.BackgroundTransparency = standing.CoreAlive and 0.22 or 0.5
+            row.BackgroundTransparency = standing.CoreAlive and 0.18 or 0.56
         else
             row.Text = "-"
             row.TextColor3 = theme.MutedTextColor

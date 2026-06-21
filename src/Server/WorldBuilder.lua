@@ -62,19 +62,22 @@ function WorldBuilder.AddSurfaceText(part, face, text, textColor, pixelsPerStud)
     return gui
 end
 
-function WorldBuilder.AddBillboard(part, name, text, color, size, studsOffset)
+function WorldBuilder.AddBillboard(part, name, text, color, size, studsOffset, options)
+    options = options or {}
     local billboard = Instance.new("BillboardGui")
     billboard.Name = name
     billboard.Size = size or UDim2.fromOffset(220, 66)
     billboard.StudsOffset = studsOffset or Vector3.new(0, 5, 0)
-    billboard.AlwaysOnTop = true
+    billboard.AlwaysOnTop = options.AlwaysOnTop == true
+    billboard.MaxDistance = options.MaxDistance or 42
+    billboard.LightInfluence = options.LightInfluence or 0
     billboard.Parent = part
 
     local label = Instance.new("TextLabel")
     label.Name = "Label"
     label.Size = UDim2.fromScale(1, 1)
     label.BackgroundColor3 = Config.UI.Theme.PanelColor
-    label.BackgroundTransparency = 0.08
+    label.BackgroundTransparency = options.BackgroundTransparency or 0.14
     label.Font = Enum.Font.GothamBold
     label.Text = text
     label.TextColor3 = color or Config.UI.Theme.TextColor
@@ -142,9 +145,11 @@ function WorldBuilder.BuildIsland(parent, name, centerPosition, size, kit, optio
     local folder = WorldBuilder.MakeFolder(parent, name)
 
     WorldBuilder.MakePart(folder, "IslandBase", size, CFrame.new(centerPosition + Vector3.new(0, -3, 0)), kit.Primary, kit.Material)
-    WorldBuilder.MakePart(folder, "IslandForwardMass", Vector3.new(size.X * 0.52, 5, size.Z * 0.34), CFrame.new(centerPosition + Vector3.new(0, -2, -size.Z * 0.46)), kit.Primary:Lerp(kit.Secondary, 0.22), kit.Material)
-    WorldBuilder.MakePart(folder, "IslandLeftMass", Vector3.new(size.X * 0.34, 5, size.Z * 0.58), CFrame.new(centerPosition + Vector3.new(-size.X * 0.42, -2.3, 0)), kit.Primary, kit.Material)
-    WorldBuilder.MakePart(folder, "IslandRightMass", Vector3.new(size.X * 0.34, 5, size.Z * 0.58), CFrame.new(centerPosition + Vector3.new(size.X * 0.42, -2.3, 0)), kit.Primary:Lerp(kit.Rim, 0.12), kit.Material)
+    WorldBuilder.MakePart(folder, "IslandForwardMass", Vector3.new(size.X * 0.56, 5, size.Z * 0.28), CFrame.new(centerPosition + Vector3.new(0, -2, -size.Z * 0.42)), kit.Primary:Lerp(kit.Secondary, 0.22), kit.Material)
+    WorldBuilder.MakePart(folder, "IslandRearMass", Vector3.new(size.X * 0.5, 4, size.Z * 0.2), CFrame.new(centerPosition + Vector3.new(0, -2.5, size.Z * 0.34)), kit.Primary:Lerp(kit.Rim, 0.08), kit.Material)
+    WorldBuilder.MakePart(folder, "IslandLeftMass", Vector3.new(size.X * 0.3, 5, size.Z * 0.56), CFrame.new(centerPosition + Vector3.new(-size.X * 0.4, -2.3, 0)), kit.Primary, kit.Material)
+    WorldBuilder.MakePart(folder, "IslandRightMass", Vector3.new(size.X * 0.3, 5, size.Z * 0.56), CFrame.new(centerPosition + Vector3.new(size.X * 0.4, -2.3, 0)), kit.Primary:Lerp(kit.Rim, 0.12), kit.Material)
+    WorldBuilder.MakePart(folder, "CenterPlateau", Vector3.new(size.X * 0.64, 2, size.Z * 0.52), CFrame.new(centerPosition + Vector3.new(0, 1, 2)), kit.Secondary:Lerp(Color3.new(1, 1, 1), 0.04), Enum.Material.SmoothPlastic)
 
     WorldBuilder.MakePart(folder, "FrontRim", Vector3.new(size.X + 10, 3, 6), CFrame.new(centerPosition + Vector3.new(0, -5, -size.Z / 2 - 2)), kit.Rim, Enum.Material.Rock)
     WorldBuilder.MakePart(folder, "BackRim", Vector3.new(size.X + 10, 3, 6), CFrame.new(centerPosition + Vector3.new(0, -5, size.Z / 2 + 2)), kit.Rim, Enum.Material.Rock)
@@ -167,10 +172,10 @@ function WorldBuilder.BuildIsland(parent, name, centerPosition, size, kit, optio
     if options.Glow then
         local glow = WorldBuilder.MakePart(folder, "IslandGlow", Vector3.new(size.X * 0.82, 1, size.Z * 0.82), CFrame.new(centerPosition + Vector3.new(0, 0.25, 0)), kit.Accent, Enum.Material.Neon, {
             CanCollide = false,
-            Transparency = 0.78,
+            Transparency = 0.88,
             CastShadow = false,
         })
-        WorldBuilder.AddPointLight(glow, kit.Accent, 0.8, math.max(size.X, size.Z) * 0.45)
+        WorldBuilder.AddPointLight(glow, kit.Accent, 0.34, math.max(size.X, size.Z) * 0.28)
     end
 
     return folder
@@ -180,10 +185,10 @@ function WorldBuilder.BuildRouteMarkers(parent, fromPosition, toPosition, color)
     local delta = toPosition - fromPosition
     for index = 1, 5 do
         local alpha = index / 6
-        local position = fromPosition + (delta * alpha) + Vector3.new(0, 4 + (index % 2), 0)
-        WorldBuilder.MakePart(parent, "RouteMarker" .. index, Vector3.new(5, 0.6, 5), CFrame.new(position), color, Enum.Material.Neon, {
+        local position = fromPosition + (delta * alpha) + Vector3.new(0, 0.24, 0)
+        WorldBuilder.MakePart(parent, "RouteMarker" .. index, Vector3.new(7, 0.45, 3), CFrame.new(position), color:Lerp(Color3.new(1, 1, 1), 0.08), Enum.Material.SmoothPlastic, {
             CanCollide = false,
-            Transparency = 0.35,
+            Transparency = 0.12,
             CastShadow = false,
         })
     end
@@ -191,24 +196,32 @@ end
 
 function WorldBuilder.BuildGenerator(parent, name, position, color, resourceName)
     local pad = WorldBuilder.MakePart(parent, name .. "Pad", Vector3.new(9, 1, 9), CFrame.new(position + Vector3.new(0, 0.1, 0)), color:Lerp(Color3.new(0, 0, 0), 0.35), Enum.Material.Metal)
-    local generator = WorldBuilder.MakePart(parent, name, Vector3.new(4, 1.2, 4), CFrame.new(position + Vector3.new(0, 1.2, 0)), color, Enum.Material.Neon)
-    WorldBuilder.AddBillboard(generator, name .. "Billboard", resourceName, VisualKit.Global.TextLight, UDim2.fromOffset(170, 50), Vector3.new(0, 4, 0))
-    WorldBuilder.AddPointLight(generator, color, 1.25, 18)
-    WorldBuilder.AddParticles(generator, color, 3, 1.2)
+    local generator = WorldBuilder.MakePart(parent, name, Vector3.new(4, 1.2, 4), CFrame.new(position + Vector3.new(0, 1.2, 0)), color, Enum.Material.Glass, {
+        Transparency = 0.12,
+    })
+    local sign = WorldBuilder.MakePart(parent, name .. "Sign", Vector3.new(8, 2.2, 0.6), CFrame.new(position + Vector3.new(0, 3.7, -4.6)), Color3.fromRGB(24, 30, 43), Enum.Material.SmoothPlastic, {
+        CanCollide = false,
+    })
+    WorldBuilder.AddSurfaceText(sign, Enum.NormalId.Front, resourceName, VisualKit.Global.TextLight, 26)
+    WorldBuilder.AddPointLight(generator, color, 0.45, 12)
+    WorldBuilder.AddParticles(generator, color, 1.2, 1)
     pad:SetAttribute("GameplayDecor", true)
+    sign:SetAttribute("GameplayDecor", true)
     return generator
 end
 
 function WorldBuilder.BuildShopStand(parent, name, position, color, title)
-    local stand = WorldBuilder.MakePart(parent, name, Vector3.new(7, 7, 6), CFrame.new(position), color, Enum.Material.SmoothPlastic)
-    local counter = WorldBuilder.MakePart(parent, name .. "Counter", Vector3.new(10, 2, 5), CFrame.new(position + Vector3.new(0, -3, -4)), color:Lerp(Color3.new(0, 0, 0), 0.25), Enum.Material.Metal)
-    local roof = WorldBuilder.MakePart(parent, name .. "Roof", Vector3.new(12, 1.2, 8), CFrame.new(position + Vector3.new(0, 4.5, 0)), color:Lerp(Color3.new(1, 1, 1), 0.2), Enum.Material.Neon, {
-        Transparency = 0.08,
+    local stand = WorldBuilder.MakePart(parent, name, Vector3.new(9, 8, 7), CFrame.new(position), color:Lerp(Color3.new(0, 0, 0), 0.08), Enum.Material.SmoothPlastic)
+    local counter = WorldBuilder.MakePart(parent, name .. "Counter", Vector3.new(12, 2, 6), CFrame.new(position + Vector3.new(0, -3, -4.5)), color:Lerp(Color3.new(0, 0, 0), 0.35), Enum.Material.Metal)
+    local roof = WorldBuilder.MakePart(parent, name .. "Roof", Vector3.new(13, 1.2, 9), CFrame.new(position + Vector3.new(0, 4.8, 0)), color:Lerp(Color3.new(1, 1, 1), 0.1), Enum.Material.SmoothPlastic)
+    local sign = WorldBuilder.MakePart(parent, name .. "Sign", Vector3.new(8, 2.6, 0.6), CFrame.new(position + Vector3.new(0, 2.6, -3.8)), Color3.fromRGB(18, 24, 34), Enum.Material.SmoothPlastic, {
+        CanCollide = false,
     })
-    WorldBuilder.AddBillboard(stand, name .. "Billboard", title, VisualKit.Global.TextLight, UDim2.fromOffset(190, 56), Vector3.new(0, 6, 0))
-    WorldBuilder.AddPointLight(roof, color, 0.8, 16)
+    WorldBuilder.AddSurfaceText(sign, Enum.NormalId.Front, title, VisualKit.Global.TextLight, 28)
+    WorldBuilder.AddPointLight(roof, color, 0.35, 12)
     counter:SetAttribute("GameplayDecor", true)
     roof:SetAttribute("GameplayDecor", true)
+    sign:SetAttribute("GameplayDecor", true)
     return stand
 end
 
@@ -216,15 +229,20 @@ function WorldBuilder.BuildCore(parent, position, color)
     local pedestal = WorldBuilder.MakePart(parent, "CorePedestal", Vector3.new(14, 2, 14), CFrame.new(position + Vector3.new(0, -3.4, 0)), color:Lerp(Color3.new(0, 0, 0), 0.35), Enum.Material.Metal)
     local aura = WorldBuilder.MakePart(parent, "CoreAura", Vector3.new(11, 0.4, 11), CFrame.new(position + Vector3.new(0, -2.1, 0)), color, Enum.Material.Neon, {
         CanCollide = false,
-        Transparency = 0.45,
+        Transparency = 0.64,
         CastShadow = false,
     })
     local core = WorldBuilder.MakePart(parent, "Core", Vector3.new(8, 8, 8), CFrame.new(position), color, Enum.Material.ForceField, {
         Shape = Enum.PartType.Ball,
     })
-    WorldBuilder.AddBillboard(core, "CoreStatus", "Nucleo 6/6", VisualKit.Global.TextLight, UDim2.fromOffset(210, 58), Vector3.new(0, 6, 0))
-    WorldBuilder.AddPointLight(core, color, 1.2, 22)
-    WorldBuilder.AddParticles(core, color, 2, 1.6)
+    local statusPlinth = WorldBuilder.MakePart(parent, "CoreStatusPlinth", Vector3.new(10, 3, 2), CFrame.new(position + Vector3.new(0, -0.5, -8)), Color3.fromRGB(18, 24, 34), Enum.Material.SmoothPlastic)
+    WorldBuilder.AddSurfaceText(statusPlinth, Enum.NormalId.Front, "Nucleo 6/6", VisualKit.Global.TextLight, 26)
+    WorldBuilder.AddBillboard(core, "CoreStatus", "Nucleo 6/6", VisualKit.Global.TextLight, UDim2.fromOffset(190, 44), Vector3.new(0, 5.2, 0), {
+        MaxDistance = 22,
+        BackgroundTransparency = 0.22,
+    })
+    WorldBuilder.AddPointLight(core, color, 0.65, 18)
+    WorldBuilder.AddParticles(core, color, 1.4, 1.4)
     pedestal:SetAttribute("GameplayDecor", true)
     aura:SetAttribute("GameplayDecor", true)
     return core
@@ -319,10 +337,10 @@ function WorldBuilder.BuildLandmark(parent, centerPosition, kit, labelText)
         makeMushroom(parent, basePosition + Vector3.new(8, 0, -4), Color3.fromRGB(220, 205, 188), kit.Accent)
     end
 
-    local banner = WorldBuilder.MakePart(parent, "BiomeBanner", Vector3.new(24, 9, 1), CFrame.new(centerPosition + Vector3.new(0, 16, -34)), kit.Accent, Enum.Material.Neon, {
+    local banner = WorldBuilder.MakePart(parent, "BiomeBanner", Vector3.new(24, 9, 1), CFrame.new(centerPosition + Vector3.new(0, 16, -34)), Color3.fromRGB(21, 28, 39), Enum.Material.SmoothPlastic, {
         CanCollide = false,
     })
-    WorldBuilder.AddSurfaceText(banner, Enum.NormalId.Front, labelText, VisualKit.Global.TextDark, 28)
+    WorldBuilder.AddSurfaceText(banner, Enum.NormalId.Front, labelText, kit.Accent, 28)
 end
 
 return WorldBuilder

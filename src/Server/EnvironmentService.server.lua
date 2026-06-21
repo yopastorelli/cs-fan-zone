@@ -34,8 +34,8 @@ local atmosphere = ensureEffect("Atmosphere", "CSFanZoneAtmosphere")
 atmosphere.Color = lighting.AtmosphereColor
 atmosphere.Decay = lighting.AtmosphereDecay
 atmosphere.Density = lighting.AtmosphereDensity
-atmosphere.Haze = 1.2
-atmosphere.Glare = 0.12
+atmosphere.Haze = 0.78
+atmosphere.Glare = 0.04
 
 local bloom = ensureEffect("BloomEffect", "CSFanZoneBloom")
 bloom.Intensity = lighting.BloomIntensity
@@ -48,5 +48,5 @@ colorCorrection.Saturation = lighting.Saturation
 colorCorrection.TintColor = Color3.fromRGB(255, 255, 255)
 
 local sunRays = ensureEffect("SunRaysEffect", "CSFanZoneSunRays")
-sunRays.Intensity = 0.035
-sunRays.Spread = 0.72
+sunRays.Intensity = 0.012
+sunRays.Spread = 0.64

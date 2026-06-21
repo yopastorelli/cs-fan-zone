@@ -18,6 +18,9 @@ INPUT: desktop and mobile
 - avoid fixed offsets as the only responsive strategy
 - no text clipping on small viewport
 - no full-screen onboarding card during active gameplay
+- world-space labels must not dominate the lobby frame
+- shop, upgrade and generator naming should be local/contextual, not giant global billboards
+- HUD must remain visually stronger than distant world labels in the first 10 seconds
 
 ## SHOP_MODAL
 - categories: Blocos, Combate, Ferramentas, Suporte, Upgrades
@@ -41,3 +44,4 @@ INPUT: desktop and mobile
 - player knows own core state during active match
 - player knows resources and purchase availability
 - UI does not obscure combat center on desktop or mobile
+- top HUD remains readable even when the arena is bright

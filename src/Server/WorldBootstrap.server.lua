@@ -88,46 +88,59 @@ local function buildLobby(root)
     local stage = WorldBuilder.MakePart(
         lobby,
         "BriefingStage",
-        Vector3.new(72, 2, 24),
-        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 3, -26)),
-        VisualKit.Global.MetalDark,
+        Vector3.new(88, 2, 28),
+        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 3, -22)),
+        Color3.fromRGB(32, 40, 56),
         Enum.Material.Metal
     )
     stage:SetAttribute("SafeZone", true)
+    local upperStage = WorldBuilder.MakePart(
+        lobby,
+        "UpperBriefingStage",
+        Vector3.new(56, 2, 18),
+        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 5, -34)),
+        Color3.fromRGB(45, 57, 78),
+        Enum.Material.SmoothPlastic
+    )
+    upperStage:SetAttribute("SafeZone", true)
 
-    local archLeft = WorldBuilder.MakePart(lobby, "ArenaArchLeft", Vector3.new(6, 28, 6), CFrame.new(WorldData.Lobby.Position + Vector3.new(-42, 15, -48)), Config.UI.Theme.AccentColor, Enum.Material.Neon)
-    local archRight = WorldBuilder.MakePart(lobby, "ArenaArchRight", Vector3.new(6, 28, 6), CFrame.new(WorldData.Lobby.Position + Vector3.new(42, 15, -48)), Config.UI.Theme.AccentColor, Enum.Material.Neon)
-    local archTop = WorldBuilder.MakePart(lobby, "ArenaArchTop", Vector3.new(90, 5, 6), CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 29, -48)), Config.UI.Theme.AccentColor, Enum.Material.Neon)
-    WorldBuilder.AddPointLight(archTop, Config.UI.Theme.AccentColor, 1.3, 36)
+    local archLeft = WorldBuilder.MakePart(lobby, "ArenaArchLeft", Vector3.new(8, 30, 8), CFrame.new(WorldData.Lobby.Position + Vector3.new(-42, 16, -52)), Color3.fromRGB(43, 55, 72), Enum.Material.Metal)
+    local archRight = WorldBuilder.MakePart(lobby, "ArenaArchRight", Vector3.new(8, 30, 8), CFrame.new(WorldData.Lobby.Position + Vector3.new(42, 16, -52)), Color3.fromRGB(43, 55, 72), Enum.Material.Metal)
+    local archTop = WorldBuilder.MakePart(lobby, "ArenaArchTop", Vector3.new(92, 6, 8), CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 30, -52)), Color3.fromRGB(43, 55, 72), Enum.Material.Metal)
+    local archAccent = WorldBuilder.MakePart(lobby, "ArenaArchAccent", Vector3.new(78, 1.4, 1.2), CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 27, -47.5)), Config.UI.Theme.AccentColor, Enum.Material.Neon, {
+        CanCollide = false,
+        Transparency = 0.22,
+    })
+    WorldBuilder.AddPointLight(archAccent, Config.UI.Theme.AccentColor, 0.42, 24)
 
     local objectiveSign = WorldBuilder.MakePart(
         lobby,
         "ObjectiveSign",
-        Vector3.new(62, 14, 1),
-        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 15, -51)),
-        Color3.fromRGB(240, 248, 255),
+        Vector3.new(68, 14, 1),
+        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 16, -47.5)),
+        Color3.fromRGB(18, 24, 34),
         Enum.Material.SmoothPlastic,
         { CanCollide = false }
     )
-    WorldBuilder.AddSurfaceText(objectiveSign, Enum.NormalId.Front, "Proteja seu nucleo\nColete recursos, compre itens e quebre os nucleos inimigos", VisualKit.Global.TextDark, 26)
+    WorldBuilder.AddSurfaceText(objectiveSign, Enum.NormalId.Front, "CS Fan Zone Arena\nProteja seu nucleo, equipe sua dupla e domine o centro", VisualKit.Global.TextLight, 26)
 
     local queueSign = WorldBuilder.MakePart(
         lobby,
         "QueueStatusSign",
         Vector3.new(30, 10, 1),
-        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 12, 38)),
-        Config.UI.Theme.WarningColor,
-        Enum.Material.Neon,
+        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 12, 44)),
+        Color3.fromRGB(24, 30, 43),
+        Enum.Material.SmoothPlastic,
         { CanCollide = false }
     )
-    WorldBuilder.AddSurfaceText(queueSign, Enum.NormalId.Front, "Fila\nAguardando jogadores", VisualKit.Global.TextDark, 26)
+    WorldBuilder.AddSurfaceText(queueSign, Enum.NormalId.Front, "Fila\nAguardando jogadores", Config.UI.Theme.WarningColor, 26)
 
     local walkway = WorldBuilder.MakePart(
         lobby,
         "LobbyWalkway",
         Config.World.Lobby.WalkwaySize,
         CFrame.new(WorldData.Lobby.WalkwayPosition),
-        VisualKit.Global.MetalMid,
+        Color3.fromRGB(57, 72, 97),
         Enum.Material.Metal
     )
     local viewDeck = WorldBuilder.MakePart(
@@ -135,23 +148,39 @@ local function buildLobby(root)
         "LobbyViewDeck",
         Config.World.Lobby.ViewDeckSize,
         CFrame.new(WorldData.Lobby.ViewDeckPosition),
-        Color3.fromRGB(88, 112, 146),
+        Color3.fromRGB(65, 80, 108),
         Enum.Material.Metal
     )
     walkway:SetAttribute("SafeZone", true)
     viewDeck:SetAttribute("SafeZone", true)
 
-    WorldBuilder.MakePart(lobby, "WalkwayRailLeft", Vector3.new(2, 6, Config.World.Lobby.WalkwaySize.Z), CFrame.new(WorldData.Lobby.WalkwayPosition + Vector3.new(-17, 4, 0)), Config.UI.Theme.AccentColor, Enum.Material.Neon, { Transparency = 0.22 })
-    WorldBuilder.MakePart(lobby, "WalkwayRailRight", Vector3.new(2, 6, Config.World.Lobby.WalkwaySize.Z), CFrame.new(WorldData.Lobby.WalkwayPosition + Vector3.new(17, 4, 0)), Config.UI.Theme.AccentColor, Enum.Material.Neon, { Transparency = 0.22 })
+    WorldBuilder.MakePart(lobby, "WalkwayRailLeft", Vector3.new(2, 4, Config.World.Lobby.WalkwaySize.Z), CFrame.new(WorldData.Lobby.WalkwayPosition + Vector3.new(-17, 3, 0)), Color3.fromRGB(36, 46, 61), Enum.Material.Metal, { Transparency = 0.1 })
+    WorldBuilder.MakePart(lobby, "WalkwayRailRight", Vector3.new(2, 4, Config.World.Lobby.WalkwaySize.Z), CFrame.new(WorldData.Lobby.WalkwayPosition + Vector3.new(17, 3, 0)), Color3.fromRGB(36, 46, 61), Enum.Material.Metal, { Transparency = 0.1 })
+    WorldBuilder.MakePart(lobby, "WalkwayGuide", Vector3.new(8, 0.4, Config.World.Lobby.WalkwaySize.Z - 12), CFrame.new(WorldData.Lobby.WalkwayPosition + Vector3.new(0, 1.3, 0)), Config.UI.Theme.AccentColor, Enum.Material.Neon, {
+        CanCollide = false,
+        Transparency = 0.62,
+        CastShadow = false,
+    })
+
+    local overlookFrameLeft = WorldBuilder.MakePart(lobby, "OverlookFrameLeft", Vector3.new(14, 18, 8), CFrame.new(WorldData.Lobby.ViewDeckPosition + Vector3.new(-30, 10, -4)), Color3.fromRGB(31, 40, 54), Enum.Material.Metal)
+    local overlookFrameRight = WorldBuilder.MakePart(lobby, "OverlookFrameRight", Vector3.new(14, 18, 8), CFrame.new(WorldData.Lobby.ViewDeckPosition + Vector3.new(30, 10, -4)), Color3.fromRGB(31, 40, 54), Enum.Material.Metal)
+    local overlookFrameTop = WorldBuilder.MakePart(lobby, "OverlookFrameTop", Vector3.new(74, 4, 8), CFrame.new(WorldData.Lobby.ViewDeckPosition + Vector3.new(0, 19, -4)), Color3.fromRGB(31, 40, 54), Enum.Material.Metal)
+    overlookFrameLeft:SetAttribute("SafeZone", true)
+    overlookFrameRight:SetAttribute("SafeZone", true)
+    overlookFrameTop:SetAttribute("SafeZone", true)
 
     for index, teamConfig in ipairs(Config.Teams) do
         local kit = VisualKit.Biomes[teamConfig.BiomeId]
         local angle = math.rad((index - 1) * 60)
-        local totemPosition = WorldData.Lobby.Position + Vector3.new(math.cos(angle) * 55, 2, math.sin(angle) * 32)
-        local totem = WorldBuilder.MakePart(lobby, "BiomeTotem_" .. teamConfig.Id, Vector3.new(8, 12, 8), CFrame.new(totemPosition + Vector3.new(0, 6, 0)), kit.Accent, Enum.Material.Neon, {
-            Transparency = 0.08,
+        local totemPosition = WorldData.Lobby.Position + Vector3.new(math.cos(angle) * 52, 2, math.sin(angle) * 28)
+        local pedestal = WorldBuilder.MakePart(lobby, "BiomeTotem_" .. teamConfig.Id, Vector3.new(10, 8, 10), CFrame.new(totemPosition + Vector3.new(0, 4, 0)), Color3.fromRGB(23, 29, 40), Enum.Material.SmoothPlastic)
+        local accent = WorldBuilder.MakePart(lobby, "BiomeTotemAccent_" .. teamConfig.Id, Vector3.new(7, 0.8, 7), CFrame.new(totemPosition + Vector3.new(0, 8.4, 0)), kit.Accent, Enum.Material.SmoothPlastic)
+        local face = WorldBuilder.MakePart(lobby, "BiomeTotemFace_" .. teamConfig.Id, Vector3.new(8, 3.2, 0.6), CFrame.new(totemPosition + Vector3.new(0, 4.8, -5.2)), Color3.fromRGB(18, 24, 34), Enum.Material.SmoothPlastic, {
+            CanCollide = false,
         })
-        WorldBuilder.AddBillboard(totem, "TotemLabel", teamConfig.BiomeDisplayName, VisualKit.Global.TextLight, UDim2.fromOffset(150, 42), Vector3.new(0, 8, 0))
+        WorldBuilder.AddSurfaceText(face, Enum.NormalId.Front, teamConfig.BiomeDisplayName, kit.Accent, 24)
+        pedestal:SetAttribute("SafeZone", true)
+        accent:SetAttribute("SafeZone", true)
     end
 
     archLeft:SetAttribute("SafeZone", true)
@@ -168,12 +197,12 @@ local function buildBase(root, teamConfig)
 
     WorldBuilder.BuildLandmark(folder, teamConfig.BasePosition, kit, teamConfig.BiomeDisplayName)
     WorldBuilder.BuildBiomeProps(folder, teamConfig.BasePosition, kit)
-    WorldBuilder.BuildRouteMarkers(folder, teamConfig.BasePosition + Vector3.new(0, 2, -34), Vector3.new(0, 2, 0), kit.Accent)
+    WorldBuilder.BuildRouteMarkers(folder, teamConfig.BasePosition + Vector3.new(0, 1.2, -32), Vector3.new(0, 1.2, 0), kit.Accent)
 
     local spawn = makeSpawn(folder, "Spawn", CFrame.new(teamConfig.BasePosition + layout.SpawnOffset), teamConfig.Color, false, teamConfig.Color)
-    WorldBuilder.MakePart(folder, "SpawnTrim", Vector3.new(16, 0.5, 16), CFrame.new(teamConfig.BasePosition + layout.SpawnOffset + Vector3.new(0, -0.4, 0)), teamConfig.Color:Lerp(Color3.new(1, 1, 1), 0.2), Enum.Material.Neon, {
+    WorldBuilder.MakePart(folder, "SpawnTrim", Vector3.new(16, 0.5, 16), CFrame.new(teamConfig.BasePosition + layout.SpawnOffset + Vector3.new(0, -0.4, 0)), teamConfig.Color:Lerp(Color3.new(1, 1, 1), 0.12), Enum.Material.SmoothPlastic, {
         CanCollide = false,
-        Transparency = 0.32,
+        Transparency = 0.16,
     })
 
     local core = WorldBuilder.BuildCore(folder, teamConfig.BasePosition + layout.CoreOffset, teamConfig.Color)
@@ -234,7 +263,7 @@ local function buildBase(root, teamConfig)
         CFrame.new(teamConfig.BasePosition + Vector3.new(0, 1, -2)),
         teamConfig.Color:Lerp(Color3.new(0, 0, 0), 0.18),
         Enum.Material.SmoothPlastic,
-        { Transparency = 0.42 }
+        { Transparency = 0.62 }
     )
     defensePad:SetAttribute("GameplayDecor", true)
 
@@ -248,16 +277,19 @@ local function buildCenter(root)
 
     local ring = WorldBuilder.MakePart(centerFolder, "EmeraldRing", Vector3.new(62, 1.2, 62), CFrame.new(WorldData.CenterIsland.Position + Vector3.new(0, 2.4, 0)), VisualKit.Global.Emerald, Enum.Material.Neon, {
         CanCollide = false,
-        Transparency = 0.62,
+        Transparency = 0.8,
         CastShadow = false,
     })
-    WorldBuilder.AddPointLight(ring, VisualKit.Global.Emerald, 1.1, 48)
+    WorldBuilder.AddPointLight(ring, VisualKit.Global.Emerald, 0.32, 28)
 
     local tower = WorldBuilder.MakePart(centerFolder, "EmeraldTower", Vector3.new(12, 34, 12), CFrame.new(WorldData.CenterIsland.Position + Vector3.new(0, 17, 0)), VisualKit.Global.Emerald, Enum.Material.Glass, {
-        Transparency = 0.2,
+        Transparency = 0.32,
     })
-    WorldBuilder.AddParticles(tower, VisualKit.Global.Emerald, 8, 1.8)
-    WorldBuilder.AddBillboard(tower, "CenterBillboard", "Centro\nEsmeraldas", VisualKit.Global.TextLight, UDim2.fromOffset(240, 80), Vector3.new(0, 24, 0))
+    WorldBuilder.AddParticles(tower, VisualKit.Global.Emerald, 3.2, 1.6)
+    local centerSign = WorldBuilder.MakePart(centerFolder, "CenterSign", Vector3.new(22, 4, 1), CFrame.new(WorldData.CenterIsland.Position + Vector3.new(0, 8, -26)), Color3.fromRGB(18, 24, 34), Enum.Material.SmoothPlastic, {
+        CanCollide = false,
+    })
+    WorldBuilder.AddSurfaceText(centerSign, Enum.NormalId.Front, "Centro de Esmeraldas", VisualKit.Global.TextLight, 24)
 
     local generatorsFolder = WorldBuilder.MakeFolder(centerFolder, "Generators")
     for index, position in ipairs(WorldData.CenterEmeraldGenerators) do
@@ -281,13 +313,17 @@ local function buildMidIslands(root)
         local marker = WorldBuilder.MakePart(
             islandFolder,
             "MidRoutePylon",
-            Vector3.new(8, 14, 8),
+            Vector3.new(7, 11, 7),
             CFrame.new(island.Position + Vector3.new(0, 7, -8)),
-            Config.UI.Theme.WarningColor,
-            Enum.Material.Neon,
-            { Transparency = 0.08 }
+            Color3.fromRGB(38, 48, 63),
+            Enum.Material.Metal,
+            { Transparency = 0.04 }
         )
-        WorldBuilder.AddBillboard(marker, "MidLabel", "Rota\nEsmeralda", VisualKit.Global.TextLight, UDim2.fromOffset(170, 58), Vector3.new(0, 10, 0))
+        local cap = WorldBuilder.MakePart(islandFolder, "MidRouteCap", Vector3.new(5, 1, 5), CFrame.new(island.Position + Vector3.new(0, 13, -8)), VisualKit.Global.Emerald, Enum.Material.Neon, {
+            CanCollide = false,
+            Transparency = 0.35,
+        })
+        WorldBuilder.AddPointLight(cap, VisualKit.Global.Emerald, 0.28, 10)
 
         local generator = WorldBuilder.BuildGenerator(
             islandFolder,
@@ -310,7 +346,10 @@ local function buildSpectatorDeck(root)
         Enum.Material.Metal,
         { Transparency = 0.08 }
     )
-    WorldBuilder.AddBillboard(deck, "SpectatorLabel", "Espectador", VisualKit.Global.TextLight, UDim2.fromOffset(170, 48), Vector3.new(0, 6, 0))
+    local deckSign = WorldBuilder.MakePart(root, "SpectatorSign", Vector3.new(16, 3.4, 1), CFrame.new(WorldData.SpectatorDeck.Position + Vector3.new(0, 5, -20)), Color3.fromRGB(18, 24, 34), Enum.Material.SmoothPlastic, {
+        CanCollide = false,
+    })
+    WorldBuilder.AddSurfaceText(deckSign, Enum.NormalId.Front, "Espectador", VisualKit.Global.TextLight, 24)
     ArenaState.RegisterSpectatorSpawn(deck)
 end
 

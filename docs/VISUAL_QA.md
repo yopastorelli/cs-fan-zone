@@ -19,16 +19,19 @@
 
 ## PASS_CRITERIA
 - first screenshot does not look empty
+- first screenshot does not look cluttered by stacked floating labels
 - each biome is distinguishable by silhouette and palette
 - core, shops and generators are visible within 5 seconds after spawning at base
 - center is visually stronger than side islands
 - no debug-looking flat platforms dominate the scene
+- bloom and exposure do not wash out pads, stands or biome materials
 - no UI text is clipped
 - no important world object is hidden behind UI
 - no red errors in Studio Output for 5 minutes
 
 ## FAIL_CONDITIONS
 - any base relies on text label as primary identity
+- giant floating labels overlap in the lobby or center frame
 - lobby spawn faces empty space
 - platforms look like unstyled rectangles
 - UI overlaps active combat controls or hides resources

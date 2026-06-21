@@ -12,6 +12,7 @@
 3. em ate 10s o HUD deixa claro objetivo, fila minima e proximo passo
 4. card de ajuda no lobby pode ser fechado e reaberto por botao `Ajuda`
 5. o lobby mostra vista clara da arena, centro e 6 bases: Planicie, Deserto, Taiga, Selva, Neve, Cogumelos
+6. no primeiro frame nao existem labels gigantes sobrepostas de loja, upgrades ou rota
 6. ao iniciar contagem, aparece countdown central e aviso de dupla automatica
 7. em partida, HUD mostra estado, timer, recursos e placar de duplas
 8. geradores soltam pickups de recurso com labels legiveis
@@ -28,10 +29,12 @@
 
 ## VISUAL_QA
 1. screenshot inicial do lobby nao parece vazio
+2. screenshot inicial do lobby nao parece poluido por texto flutuante
 2. cada bioma e reconhecivel por silhueta/cor sem ler a placa
 3. centro parece objetivo premium por luz, altura e VFX
-4. loja e upgrades parecem stands diferentes, nao cubos genericos
+4. loja e upgrades parecem stands diferentes, nao cubos genericos, e seus nomes aparecem integrados ao stand
 5. nucleo fica destacado em pedestal com aura
+6. superfícies claras nao estouram em branco a ponto de esconder forma/material
 6. HUD nao corta texto em viewport desktop
 7. HUD nao corta texto em viewport mobile
 8. loja mostra categorias e estado visual de compra possivel/recusada
