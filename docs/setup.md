@@ -25,6 +25,15 @@ Se `rojo` ainda nao estiver no `PATH`, use `~/.rokit/bin/rojo` explicitamente co
 5. Rode `File -> Publish to Roblox`.
 6. Ajuste privacidade e permissoes no dashboard da experiencia.
 
+## Conteudo e compliance
+
+- Desenvolva primeiro em privado ou com playtesters conhecidos.
+- Mire maturidade `Minimal` ou `Mild`.
+- Use referencias indiretas e originais a comunidade.
+- Nao use marcas, nomes reais, logos, vozes ou imagens sem autorizacao.
+- Registre assets externos em `docs/asset-register.md`.
+- Coloque creditos obrigatorios em `docs/ATTRIBUTIONS.md`.
+
 ## Fluxo Git/GitHub
 
 ```bash
