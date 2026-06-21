@@ -1,0 +1,337 @@
+local Config = {
+    Teams = {
+        {
+            Id = "planicie",
+            DisplayName = "Dupla Planicie",
+            Members = { "Bern", "Caduxinn" },
+            BiomeId = "planicie",
+            BiomeDisplayName = "Planicie",
+            Color = Color3.fromRGB(119, 201, 105),
+            BasePosition = Vector3.new(0, 0, -210),
+        },
+        {
+            Id = "deserto",
+            DisplayName = "Dupla Deserto",
+            Members = { "Chip", "Feuripe" },
+            BiomeId = "deserto",
+            BiomeDisplayName = "Deserto",
+            Color = Color3.fromRGB(239, 191, 102),
+            BasePosition = Vector3.new(182, 0, -105),
+        },
+        {
+            Id = "taiga",
+            DisplayName = "Dupla Taiga",
+            Members = { "Fixz", "Ligonz" },
+            BiomeId = "taiga",
+            BiomeDisplayName = "Taiga",
+            Color = Color3.fromRGB(77, 138, 156),
+            BasePosition = Vector3.new(182, 0, 105),
+        },
+        {
+            Id = "selva",
+            DisplayName = "Dupla Selva",
+            Members = { "Mendrake", "Muca" },
+            BiomeId = "selva",
+            BiomeDisplayName = "Selva",
+            Color = Color3.fromRGB(47, 175, 84),
+            BasePosition = Vector3.new(0, 0, 210),
+        },
+        {
+            Id = "neve",
+            DisplayName = "Dupla Neve",
+            Members = { "Nait", "Pedrux" },
+            BiomeId = "neve",
+            BiomeDisplayName = "Neve",
+            Color = Color3.fromRGB(196, 229, 242),
+            BasePosition = Vector3.new(-182, 0, 105),
+        },
+        {
+            Id = "cogumelos",
+            DisplayName = "Dupla Cogumelos",
+            Members = { "Geleia", "Tonigon" },
+            BiomeId = "cogumelos",
+            BiomeDisplayName = "Cogumelos",
+            Color = Color3.fromRGB(193, 81, 109),
+            BasePosition = Vector3.new(-182, 0, -105),
+        },
+    },
+
+    Biomes = {
+        planicie = {
+            Id = "planicie",
+            DisplayName = "Planicie",
+            FloorColor = Color3.fromRGB(110, 176, 79),
+            AccentColor = Color3.fromRGB(187, 232, 153),
+            DetailMaterial = Enum.Material.Grass,
+        },
+        deserto = {
+            Id = "deserto",
+            DisplayName = "Deserto",
+            FloorColor = Color3.fromRGB(217, 191, 114),
+            AccentColor = Color3.fromRGB(250, 222, 154),
+            DetailMaterial = Enum.Material.Sand,
+        },
+        taiga = {
+            Id = "taiga",
+            DisplayName = "Taiga",
+            FloorColor = Color3.fromRGB(86, 128, 130),
+            AccentColor = Color3.fromRGB(132, 174, 176),
+            DetailMaterial = Enum.Material.Slate,
+        },
+        selva = {
+            Id = "selva",
+            DisplayName = "Selva",
+            FloorColor = Color3.fromRGB(44, 142, 60),
+            AccentColor = Color3.fromRGB(93, 204, 116),
+            DetailMaterial = Enum.Material.Grass,
+        },
+        neve = {
+            Id = "neve",
+            DisplayName = "Neve",
+            FloorColor = Color3.fromRGB(216, 234, 240),
+            AccentColor = Color3.fromRGB(255, 255, 255),
+            DetailMaterial = Enum.Material.Snow,
+        },
+        cogumelos = {
+            Id = "cogumelos",
+            DisplayName = "Cogumelos",
+            FloorColor = Color3.fromRGB(110, 66, 96),
+            AccentColor = Color3.fromRGB(208, 108, 132),
+            DetailMaterial = Enum.Material.Mud,
+        },
+    },
+
+    Match = {
+        MaxPlayers = 12,
+        MinPlayersToStart = 4,
+        PlayersPerTeam = 2,
+        CountdownSeconds = 20,
+        RespawnSeconds = 5,
+        SuddenDeathSeconds = 15 * 60,
+        PostMatchSeconds = 12,
+        MaxCoreHealth = 6,
+        CoreDamagePerHit = 1,
+        SpectatorHeight = 46,
+        JoinMidMatchPolicy = "LobbyUntilNextRound",
+    },
+
+    World = {
+        Lobby = {
+            SpawnPosition = Vector3.new(0, 4, 318),
+            PlatformSize = Vector3.new(150, 4, 120),
+            WalkwaySize = Vector3.new(34, 2, 124),
+            ViewDeckSize = Vector3.new(52, 2, 32),
+            SafeZoneHalfExtents = Vector3.new(76, 18, 62),
+        },
+        Spectator = {
+            DeckPosition = Vector3.new(0, 26, 0),
+            DeckSize = Vector3.new(42, 2, 42),
+        },
+    },
+
+    Generators = {
+        MaxPickupsPerGenerator = 5,
+        ResourceDefinitions = {
+            Iron = {
+                Color = Color3.fromRGB(212, 219, 224),
+                Material = Enum.Material.Metal,
+                PickupSize = Vector3.new(2.4, 1.2, 2.4),
+            },
+            Gold = {
+                Color = Color3.fromRGB(245, 205, 48),
+                Material = Enum.Material.Neon,
+                PickupSize = Vector3.new(2.2, 1, 2.2),
+            },
+            Emerald = {
+                Color = Color3.fromRGB(23, 226, 154),
+                Material = Enum.Material.Neon,
+                PickupSize = Vector3.new(2.4, 1.4, 2.4),
+            },
+        },
+        GeneratorTypes = {
+            BaseIron = {
+                ResourceType = "Iron",
+                SpawnInterval = 1.6,
+                Amount = 4,
+                TeamScoped = false,
+            },
+            BaseGold = {
+                ResourceType = "Gold",
+                SpawnInterval = 4.8,
+                Amount = 1,
+                TeamScoped = false,
+            },
+            MidEmerald = {
+                ResourceType = "Emerald",
+                SpawnInterval = 8.5,
+                Amount = 1,
+                TeamScoped = false,
+            },
+        },
+        ForgeIntervals = {
+            1.0,
+            0.82,
+            0.66,
+        },
+        PickupCollectionDistance = 10,
+    },
+
+    Interaction = {
+        ShopDistance = 18,
+        UpgradeDistance = 18,
+    },
+
+    Shop = {
+        Items = {
+            {
+                Id = "wool_bundle",
+                DisplayName = "La x16",
+                Category = "Blocos",
+                ResourceType = "Iron",
+                Cost = 16,
+                GrantType = "BlockTool",
+                Charges = 16,
+            },
+            {
+                Id = "stone_sword",
+                DisplayName = "Espada de Pedra",
+                Category = "Combate",
+                ResourceType = "Gold",
+                Cost = 8,
+                GrantType = "SwordTool",
+                DamageBonus = 10,
+            },
+            {
+                Id = "iron_pickaxe",
+                DisplayName = "Picareta de Ferro",
+                Category = "Ferramentas",
+                ResourceType = "Gold",
+                Cost = 6,
+                GrantType = "PickaxeTool",
+            },
+            {
+                Id = "healing_potion",
+                DisplayName = "Pocao de Vida",
+                Category = "Suporte",
+                ResourceType = "Emerald",
+                Cost = 4,
+                GrantType = "HealTool",
+                HealAmount = 40,
+            },
+        },
+    },
+
+    TeamUpgrades = {
+        Items = {
+            {
+                Id = "sharpness",
+                DisplayName = "Afiacao",
+                TierCosts = { 4 },
+                ResourceType = "Emerald",
+                EffectType = "SwordBonus",
+                EffectValues = { 6 },
+            },
+            {
+                Id = "protection",
+                DisplayName = "Protecao",
+                TierCosts = { 4, 8 },
+                ResourceType = "Emerald",
+                EffectType = "DamageReduction",
+                EffectValues = { 0.12, 0.22 },
+            },
+            {
+                Id = "forge",
+                DisplayName = "Forja",
+                TierCosts = { 6, 10 },
+                ResourceType = "Emerald",
+                EffectType = "ForgeTier",
+                EffectValues = { 2, 3 },
+            },
+        },
+    },
+
+    Combat = {
+        SwordBaseDamage = 24,
+        SwordHitRange = 11,
+        SwordHitAngleDot = 0.3,
+        SwordCooldownSeconds = 0.55,
+        PickaxeHitRange = 12,
+        PickaxeCooldownSeconds = 0.6,
+        BlockPlacementDistance = 10,
+        BlockGrid = 4,
+        BlockHealth = 1,
+        KillCreditWindowSeconds = 8,
+        SpawnProtectionSeconds = 1,
+        RestrictedPlacementRadius = 9,
+    },
+
+    UI = {
+        Title = "CS Fan Zone Arena",
+        QueueText = "Aguardando duplas",
+        MatchStateLabels = {
+            Waiting = "Aguardando",
+            Starting = "Contagem",
+            Active = "Partida",
+            SuddenDeath = "Morte Subita",
+            Ended = "Encerrada",
+        },
+        ResourceLabels = {
+            Iron = "Ferro",
+            Gold = "Ouro",
+            Emerald = "Esmeralda",
+        },
+        Onboarding = {
+            Title = "Como vencer",
+            Objectives = {
+                "Proteja seu nucleo",
+                "Colete ferro, ouro e esmeralda",
+                "Compre blocos e equipamentos",
+                "Destrua o nucleo inimigo para eliminar a dupla",
+            },
+            StartingText = "Voce vai para uma dupla automaticamente.",
+        },
+        Results = {
+            VictoryPrefix = "Vitoria:",
+            DrawText = "Empate: nenhuma dupla sobreviveu.",
+            ReturnText = "Retorno ao lobby em instantes.",
+        },
+        HelpMessagesByState = {
+            Lobby = "Explore o lobby e aguarde mais jogadores",
+            Waiting = "Explore o lobby e aguarde mais jogadores",
+            Starting = "Partida iniciando, prepare-se",
+            Active = "Defenda sua base e avance pelo centro",
+            SuddenDeath = "Todos os nucleos caem: sobreviva ate o fim",
+            Spectating = "Voce foi eliminado; acompanhe a rodada",
+            Ended = "Rodada encerrada; voce volta ao lobby em instantes",
+        },
+        Theme = {
+            BackgroundColor = Color3.fromRGB(13, 17, 24),
+            PanelColor = Color3.fromRGB(23, 29, 40),
+            AccentColor = Color3.fromRGB(91, 209, 247),
+            TextColor = Color3.fromRGB(247, 250, 255),
+            MutedTextColor = Color3.fromRGB(181, 194, 212),
+            SuccessColor = Color3.fromRGB(102, 241, 167),
+            WarningColor = Color3.fromRGB(250, 205, 84),
+            DangerColor = Color3.fromRGB(255, 103, 103),
+        },
+    },
+
+    Audio = {
+        PurchaseSoundId = "rbxassetid://0",
+        CoreBreakSoundId = "rbxassetid://0",
+        VictorySoundId = "rbxassetid://0",
+    },
+
+    Compliance = {
+        MaturityTarget = "Minimal",
+        AllowRealNames = true,
+        AllowLogos = false,
+        AllowRecognizableLikeness = false,
+        AllowRecognizableSlogans = false,
+        AllowOffPlatformLinks = false,
+        LicenseScope = "Roster names authorized by rights holder; logos, voices, slogans, thumbnails, and other protected assets remain blocked.",
+        AssetRegisterPath = "docs/asset-register.md",
+    },
+}
+
+return Config
