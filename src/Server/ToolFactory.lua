@@ -171,8 +171,17 @@ function ToolFactory.CreatePickaxeTool(teamId, itemConfig)
             if remainingHealth <= 0 then
                 ArenaState.RecordCoreBreak(player)
                 ArenaState.PushAnnouncement(string.format("%s destruiu o nucleo da %s", player.Name, ArenaState.Teams[targetTeamId].DisplayName), "Danger")
+                ArenaState.PushFeedback(nil, "CoreDestroyed", {
+                    TeamId = targetTeamId,
+                    AttackerName = player.Name,
+                })
             else
                 ArenaState.PushAnnouncement(string.format("%s acertou um nucleo inimigo", player.Name), "Warning")
+                ArenaState.PushFeedback(nil, "CoreHit", {
+                    TeamId = targetTeamId,
+                    AttackerName = player.Name,
+                    RemainingHealth = remainingHealth,
+                })
             end
         else
             local bounds = Workspace:GetPartBoundsInBox(rootPart.CFrame + (rootPart.CFrame.LookVector * 6), Vector3.new(6, 6, 6))

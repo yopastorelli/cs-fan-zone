@@ -5,12 +5,18 @@
 - [ ] 6 duplas aparecem com biomas em portugues
 - [ ] roster autorizado aparece corretamente: Bern/Caduxinn, Chip/Feuripe, Fixz/Ligonz, Mendrake/Muca, Nait/Pedrux, Geleia/Tonigon
 - [ ] spawn inicial acontece no lobby terrestre e nao no deck aereo
+- [ ] lobby inicial passa no screenshot de primeira impressao
+- [ ] seis biomas sao reconheciveis sem depender apenas de texto
+- [ ] centro parece objetivo premium por composicao, luz e VFX
+- [ ] UI passa em desktop e viewport mobile sem texto cortado
 - [ ] geradores entregam ferro, ouro e esmeralda
 - [ ] loja compra item com saldo e falha sem saldo
+- [ ] loja mostra categorias e disponibilidade visual
 - [ ] nao e possivel comprar ou melhorar fora da propria base e fora da partida
 - [ ] upgrades afetam toda a dupla
 - [ ] `protection` reduz dano recebido
 - [ ] nucleo destruido bloqueia respawn
+- [ ] nucleo hit/destruicao geram feedback visual claro
 - [ ] ultima dupla viva recebe vitoria
 - [ ] empate encerra a rodada corretamente quando nao sobra dupla viva
 - [ ] zero erros vermelhos por 5 minutos

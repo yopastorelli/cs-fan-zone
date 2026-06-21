@@ -52,11 +52,18 @@ remotes.PurchaseRequested.OnServerEvent:Connect(function(player, payload)
     local ok, reason = ArenaState.CanUseShop(player, shopPart)
     if not ok then
         ArenaState.PushAnnouncement(reason or "Compra recusada", "Warning")
+        ArenaState.PushFeedback(player, "PurchaseDenied", {
+            Message = reason or "Compra recusada",
+        })
         return
     end
 
     if not ArenaState.CanAfford(player, item.ResourceType, item.Cost) then
         ArenaState.PushAnnouncement(player.Name .. " nao tem saldo para " .. item.DisplayName, "Warning")
+        ArenaState.PushFeedback(player, "PurchaseDenied", {
+            Message = "Saldo insuficiente",
+            ItemId = item.Id,
+        })
         return
     end
 
@@ -68,10 +75,18 @@ remotes.PurchaseRequested.OnServerEvent:Connect(function(player, payload)
     if not granted then
         ArenaState.AddResource(player, item.ResourceType, item.Cost)
         ArenaState.PushAnnouncement(err or "Falha ao entregar item", "Danger")
+        ArenaState.PushFeedback(player, "PurchaseDenied", {
+            Message = err or "Falha ao entregar item",
+            ItemId = item.Id,
+        })
         return
     end
 
     ArenaState.PushAnnouncement(player.Name .. " comprou " .. item.DisplayName, "Success")
+    ArenaState.PushFeedback(player, "PurchaseSuccess", {
+        ItemId = item.Id,
+        DisplayName = item.DisplayName,
+    })
 end)
 
 local world = workspace:WaitForChild("CSFanZone")

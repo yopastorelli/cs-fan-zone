@@ -5,12 +5,38 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local WorldData = require(Shared:WaitForChild("WorldData"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local VisualKit = require(Shared:WaitForChild("VisualKit"))
 
 local ArenaState = require(script.Parent:WaitForChild("ArenaState"))
+local WorldBuilder = require(script.Parent:WaitForChild("WorldBuilder"))
 
 Remotes.GetAll()
 
 local WORLD_NAME = "CSFanZone"
+
+local CenterKit = {
+    Primary = Color3.fromRGB(47, 58, 76),
+    Secondary = Color3.fromRGB(74, 91, 118),
+    Rim = Color3.fromRGB(25, 34, 48),
+    Underside = Color3.fromRGB(18, 24, 36),
+    Accent = VisualKit.Global.Emerald,
+    Material = Enum.Material.Slate,
+    DetailMaterial = Enum.Material.Metal,
+    Landmark = "crystal",
+    PropStyle = "crystals",
+}
+
+local LobbyKit = {
+    Primary = Color3.fromRGB(45, 57, 78),
+    Secondary = Color3.fromRGB(71, 92, 124),
+    Rim = Color3.fromRGB(28, 35, 50),
+    Underside = Color3.fromRGB(18, 24, 36),
+    Accent = Config.UI.Theme.AccentColor,
+    Material = Enum.Material.Slate,
+    DetailMaterial = Enum.Material.Metal,
+    Landmark = "crystal",
+    PropStyle = "crystals",
+}
 
 local function clearChildren(instance)
     for _, child in ipairs(instance:GetChildren()) do
@@ -35,412 +61,274 @@ local function ensureWorldRoot()
     return root
 end
 
-local function makeFolder(parent, name)
-    local folder = Instance.new("Folder")
-    folder.Name = name
-    folder.Parent = parent
-    return folder
-end
-
-local function makePart(parent, name, size, cframe, color, material)
-    local part = Instance.new("Part")
-    part.Name = name
-    part.Size = size
-    part.CFrame = cframe
-    part.Anchored = true
-    part.Color = color
-    part.Material = material or Enum.Material.SmoothPlastic
-    part.TopSurface = Enum.SurfaceType.Smooth
-    part.BottomSurface = Enum.SurfaceType.Smooth
-    part.Parent = parent
-    return part
-end
-
-local function addSurfaceText(part, face, text, textColor)
-    local gui = Instance.new("SurfaceGui")
-    gui.Name = "SurfaceGui"
-    gui.Face = face
-    gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-    gui.PixelsPerStud = 32
-    gui.Parent = part
-
-    local label = Instance.new("TextLabel")
-    label.Name = "TextLabel"
-    label.Size = UDim2.fromScale(1, 1)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.GothamBold
-    label.Text = text
-    label.TextColor3 = textColor or Config.UI.Theme.TextColor
-    label.TextScaled = true
-    label.TextWrapped = true
-    label.Parent = gui
-    return gui
-end
-
-local function addBillboard(part, name, text, color)
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = name
-    billboard.Size = UDim2.fromOffset(220, 66)
-    billboard.StudsOffset = Vector3.new(0, 5, 0)
-    billboard.AlwaysOnTop = true
-    billboard.Parent = part
-
-    local label = Instance.new("TextLabel")
-    label.Name = "Label"
-    label.Size = UDim2.fromScale(1, 1)
-    label.BackgroundColor3 = Config.UI.Theme.PanelColor
-    label.BackgroundTransparency = 0.12
-    label.Font = Enum.Font.GothamBold
-    label.Text = text
-    label.TextColor3 = color
-    label.TextScaled = true
-    label.TextWrapped = true
-    label.Parent = billboard
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = label
-
-    return billboard
-end
-
-local function addPrompt(parent, name, actionText, objectText, holdDuration)
-    local prompt = Instance.new("ProximityPrompt")
-    prompt.Name = name
-    prompt.ActionText = actionText
-    prompt.ObjectText = objectText
-    prompt.KeyboardKeyCode = Enum.KeyCode.E
-    prompt.MaxActivationDistance = 12
-    prompt.RequiresLineOfSight = false
-    prompt.HoldDuration = holdDuration or 0
-    prompt.Parent = parent
-    return prompt
-end
-
-local function buildIsland(parent, centerPosition, size, color, material)
-    local base = makePart(parent, "IslandBase", size, CFrame.new(centerPosition + Vector3.new(0, -3, 0)), color, material)
-    local lip = makePart(parent, "IslandLip", Vector3.new(size.X + 8, 2, size.Z + 8), CFrame.new(centerPosition + Vector3.new(0, -6, 0)), color:Lerp(Color3.new(0, 0, 0), 0.25), Enum.Material.Rock)
-    lip.Transparency = 0.05
-    for _, offset in ipairs({
-        Vector3.new(-size.X * 0.2, -10, -size.Z * 0.2),
-        Vector3.new(size.X * 0.2, -10, -size.Z * 0.2),
-        Vector3.new(0, -10, size.Z * 0.25),
-    }) do
-        local support = makePart(parent, "IslandSupport", Vector3.new(8, 12, 8), CFrame.new(centerPosition + offset), color:Lerp(Color3.new(0, 0, 0), 0.35), Enum.Material.Rock)
-        support.Shape = Enum.PartType.Cylinder
-        support.Orientation = Vector3.new(0, 0, 90)
+local function makeSpawn(parent, name, cframe, color, neutral, teamColor)
+    local spawn = Instance.new("SpawnLocation")
+    spawn.Name = name
+    spawn.Size = Vector3.new(11, 1, 11)
+    spawn.Anchored = true
+    spawn.Neutral = neutral
+    spawn.Color = color
+    spawn.Material = Enum.Material.Neon
+    spawn.CFrame = cframe
+    if teamColor then
+        spawn.TeamColor = BrickColor.new(teamColor)
     end
-    return base, lip
-end
-
-local function addRail(parent, center, size)
-    local rail = makePart(parent, "Rail", size, CFrame.new(center), Color3.fromRGB(168, 182, 201), Enum.Material.Metal)
-    rail.Transparency = 0.15
-    return rail
-end
-
-local function addGuideSign(parent, titleText, bodyText, position, color)
-    local sign = makePart(parent, "GuideSign", Vector3.new(18, 10, 1), CFrame.new(position), color, Enum.Material.Neon)
-    sign.CanCollide = false
-    local gui = addSurfaceText(sign, Enum.NormalId.Front, titleText .. "\n" .. bodyText, Config.UI.Theme.TextColor)
-    gui.PixelsPerStud = 24
-    return sign
-end
-
-local function addGeneratorLabel(generator, labelText)
-    addBillboard(generator, "GeneratorBillboard", labelText, Config.UI.Theme.TextColor)
+    spawn.Parent = parent
+    return spawn
 end
 
 local function buildLobby(root)
-    local folder = makeFolder(root, "Lobby")
-    local lobbyConfig = Config.World.Lobby
+    local lobby = WorldBuilder.BuildIsland(root, "Lobby", WorldData.Lobby.Position, Config.World.Lobby.PlatformSize, LobbyKit, {
+        Glow = true,
+    })
 
-    local floor = makePart(
-        folder,
-        "LobbyFloor",
-        lobbyConfig.PlatformSize,
-        CFrame.new(WorldData.Lobby.Position),
-        Color3.fromRGB(49, 60, 78),
-        Enum.Material.Slate
-    )
+    local spawn = makeSpawn(lobby, "LobbySpawn", CFrame.new(Config.World.Lobby.SpawnPosition), Config.UI.Theme.AccentColor, true)
+    spawn:SetAttribute("SafeZone", true)
 
-    local spawn = Instance.new("SpawnLocation")
-    spawn.Name = "LobbySpawn"
-    spawn.Size = Vector3.new(12, 1, 12)
-    spawn.Anchored = true
-    spawn.Neutral = true
-    spawn.Material = Enum.Material.Neon
-    spawn.Color = Config.UI.Theme.AccentColor
-    spawn.CFrame = CFrame.new(Config.World.Lobby.SpawnPosition)
-    spawn.Parent = folder
-
-    local stage = makePart(
-        folder,
+    local stage = WorldBuilder.MakePart(
+        lobby,
         "BriefingStage",
-        Vector3.new(54, 2, 22),
-        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 3, -24)),
-        Color3.fromRGB(29, 36, 50),
-        Enum.Material.SmoothPlastic
+        Vector3.new(72, 2, 24),
+        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 3, -26)),
+        VisualKit.Global.MetalDark,
+        Enum.Material.Metal
     )
-    stage.Transparency = 0.08
+    stage:SetAttribute("SafeZone", true)
 
-    local titleSign = makePart(
-        folder,
+    local archLeft = WorldBuilder.MakePart(lobby, "ArenaArchLeft", Vector3.new(6, 28, 6), CFrame.new(WorldData.Lobby.Position + Vector3.new(-42, 15, -48)), Config.UI.Theme.AccentColor, Enum.Material.Neon)
+    local archRight = WorldBuilder.MakePart(lobby, "ArenaArchRight", Vector3.new(6, 28, 6), CFrame.new(WorldData.Lobby.Position + Vector3.new(42, 15, -48)), Config.UI.Theme.AccentColor, Enum.Material.Neon)
+    local archTop = WorldBuilder.MakePart(lobby, "ArenaArchTop", Vector3.new(90, 5, 6), CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 29, -48)), Config.UI.Theme.AccentColor, Enum.Material.Neon)
+    WorldBuilder.AddPointLight(archTop, Config.UI.Theme.AccentColor, 1.3, 36)
+
+    local objectiveSign = WorldBuilder.MakePart(
+        lobby,
         "ObjectiveSign",
-        Vector3.new(44, 14, 1),
-        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 14, -48)),
-        Config.UI.Theme.AccentColor,
-        Enum.Material.Neon
+        Vector3.new(62, 14, 1),
+        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 15, -51)),
+        Color3.fromRGB(240, 248, 255),
+        Enum.Material.SmoothPlastic,
+        { CanCollide = false }
     )
-    titleSign.CanCollide = false
-    addSurfaceText(titleSign, Enum.NormalId.Front, "Objetivo\nProteja seu nucleo e destrua os inimigos", Config.UI.Theme.TextColor)
+    WorldBuilder.AddSurfaceText(objectiveSign, Enum.NormalId.Front, "Proteja seu nucleo\nColete recursos, compre itens e quebre os nucleos inimigos", VisualKit.Global.TextDark, 26)
 
-    addGuideSign(folder, "1", "Colete ferro, ouro e esmeralda", WorldData.Lobby.Position + Vector3.new(-32, 11, -4), Color3.fromRGB(72, 104, 166))
-    addGuideSign(folder, "2", "Compre blocos, espada e upgrades", WorldData.Lobby.Position + Vector3.new(0, 11, -4), Color3.fromRGB(83, 124, 95))
-    addGuideSign(folder, "3", "Derrube o nucleo para eliminar a dupla", WorldData.Lobby.Position + Vector3.new(32, 11, -4), Color3.fromRGB(164, 91, 91))
-
-    local queueSign = makePart(
-        folder,
+    local queueSign = WorldBuilder.MakePart(
+        lobby,
         "QueueStatusSign",
         Vector3.new(30, 10, 1),
-        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 10, 34)),
+        CFrame.new(WorldData.Lobby.Position + Vector3.new(0, 12, 38)),
         Config.UI.Theme.WarningColor,
-        Enum.Material.Neon
+        Enum.Material.Neon,
+        { CanCollide = false }
     )
-    queueSign.CanCollide = false
-    addSurfaceText(queueSign, Enum.NormalId.Front, "Fila\nAguardando jogadores", Color3.fromRGB(20, 24, 30))
+    WorldBuilder.AddSurfaceText(queueSign, Enum.NormalId.Front, "Fila\nAguardando jogadores", VisualKit.Global.TextDark, 26)
 
-    local walkway = makePart(
-        folder,
+    local walkway = WorldBuilder.MakePart(
+        lobby,
         "LobbyWalkway",
-        lobbyConfig.WalkwaySize,
+        Config.World.Lobby.WalkwaySize,
         CFrame.new(WorldData.Lobby.WalkwayPosition),
-        Color3.fromRGB(64, 78, 98),
+        VisualKit.Global.MetalMid,
         Enum.Material.Metal
     )
-    local viewDeck = makePart(
-        folder,
+    local viewDeck = WorldBuilder.MakePart(
+        lobby,
         "LobbyViewDeck",
-        lobbyConfig.ViewDeckSize,
+        Config.World.Lobby.ViewDeckSize,
         CFrame.new(WorldData.Lobby.ViewDeckPosition),
-        Color3.fromRGB(80, 98, 120),
+        Color3.fromRGB(88, 112, 146),
         Enum.Material.Metal
     )
-    addGuideSign(folder, "Arena", "Observe o centro e as seis bases antes da partida", WorldData.Lobby.ViewDeckPosition + Vector3.new(0, 10, -18), Config.UI.Theme.SuccessColor)
-
-    addRail(folder, WorldData.Lobby.WalkwayPosition + Vector3.new(-16, 3, 0), Vector3.new(2, 6, lobbyConfig.WalkwaySize.Z))
-    addRail(folder, WorldData.Lobby.WalkwayPosition + Vector3.new(16, 3, 0), Vector3.new(2, 6, lobbyConfig.WalkwaySize.Z))
-
-    floor:SetAttribute("SafeZone", true)
     walkway:SetAttribute("SafeZone", true)
     viewDeck:SetAttribute("SafeZone", true)
+
+    WorldBuilder.MakePart(lobby, "WalkwayRailLeft", Vector3.new(2, 6, Config.World.Lobby.WalkwaySize.Z), CFrame.new(WorldData.Lobby.WalkwayPosition + Vector3.new(-17, 4, 0)), Config.UI.Theme.AccentColor, Enum.Material.Neon, { Transparency = 0.22 })
+    WorldBuilder.MakePart(lobby, "WalkwayRailRight", Vector3.new(2, 6, Config.World.Lobby.WalkwaySize.Z), CFrame.new(WorldData.Lobby.WalkwayPosition + Vector3.new(17, 4, 0)), Config.UI.Theme.AccentColor, Enum.Material.Neon, { Transparency = 0.22 })
+
+    for index, teamConfig in ipairs(Config.Teams) do
+        local kit = VisualKit.Biomes[teamConfig.BiomeId]
+        local angle = math.rad((index - 1) * 60)
+        local totemPosition = WorldData.Lobby.Position + Vector3.new(math.cos(angle) * 55, 2, math.sin(angle) * 32)
+        local totem = WorldBuilder.MakePart(lobby, "BiomeTotem_" .. teamConfig.Id, Vector3.new(8, 12, 8), CFrame.new(totemPosition + Vector3.new(0, 6, 0)), kit.Accent, Enum.Material.Neon, {
+            Transparency = 0.08,
+        })
+        WorldBuilder.AddBillboard(totem, "TotemLabel", teamConfig.BiomeDisplayName, VisualKit.Global.TextLight, UDim2.fromOffset(150, 42), Vector3.new(0, 8, 0))
+    end
+
+    archLeft:SetAttribute("SafeZone", true)
+    archRight:SetAttribute("SafeZone", true)
+    archTop:SetAttribute("SafeZone", true)
 end
 
 local function buildBase(root, teamConfig)
-    local biome = Config.Biomes[teamConfig.BiomeId]
-    local folder = makeFolder(root, teamConfig.Id)
+    local kit = VisualKit.Biomes[teamConfig.BiomeId]
     local layout = WorldData.BaseLayout
+    local folder = WorldBuilder.BuildIsland(root, teamConfig.Id, teamConfig.BasePosition, layout.IslandSize, kit, {
+        Glow = true,
+    })
 
-    buildIsland(folder, teamConfig.BasePosition, layout.IslandSize, biome.FloorColor, biome.DetailMaterial)
+    WorldBuilder.BuildLandmark(folder, teamConfig.BasePosition, kit, teamConfig.BiomeDisplayName)
+    WorldBuilder.BuildBiomeProps(folder, teamConfig.BasePosition, kit)
+    WorldBuilder.BuildRouteMarkers(folder, teamConfig.BasePosition + Vector3.new(0, 2, -34), Vector3.new(0, 2, 0), kit.Accent)
 
-    local sign = makePart(
-        folder,
-        "BaseSign",
-        Vector3.new(30, 10, 1),
-        CFrame.new(teamConfig.BasePosition + Vector3.new(0, 12, -30)),
-        teamConfig.Color,
-        Enum.Material.Neon
-    )
-    sign.CanCollide = false
-    addSurfaceText(sign, Enum.NormalId.Front, teamConfig.BiomeDisplayName, Config.UI.Theme.TextColor)
+    local spawn = makeSpawn(folder, "Spawn", CFrame.new(teamConfig.BasePosition + layout.SpawnOffset), teamConfig.Color, false, teamConfig.Color)
+    WorldBuilder.MakePart(folder, "SpawnTrim", Vector3.new(16, 0.5, 16), CFrame.new(teamConfig.BasePosition + layout.SpawnOffset + Vector3.new(0, -0.4, 0)), teamConfig.Color:Lerp(Color3.new(1, 1, 1), 0.2), Enum.Material.Neon, {
+        CanCollide = false,
+        Transparency = 0.32,
+    })
 
-    local spawn = Instance.new("SpawnLocation")
-    spawn.Name = "Spawn"
-    spawn.Size = Vector3.new(8, 1, 8)
-    spawn.Anchored = true
-    spawn.Neutral = false
-    spawn.TeamColor = BrickColor.new(teamConfig.Color)
-    spawn.Color = teamConfig.Color
-    spawn.Material = Enum.Material.Neon
-    spawn.CFrame = CFrame.new(teamConfig.BasePosition + layout.SpawnOffset)
-    spawn.Parent = folder
-
-    local core = makePart(
-        folder,
-        "Core",
-        Vector3.new(8, 8, 8),
-        CFrame.new(teamConfig.BasePosition + layout.CoreOffset),
-        teamConfig.Color,
-        Enum.Material.ForceField
-    )
-    core.Shape = Enum.PartType.Ball
+    local core = WorldBuilder.BuildCore(folder, teamConfig.BasePosition + layout.CoreOffset, teamConfig.Color)
     core:SetAttribute("CoreTeamId", teamConfig.Id)
     core:SetAttribute("CoreHealth", Config.Match.MaxCoreHealth)
-    addBillboard(core, "CoreStatus", "Nucleo 6/6", Config.UI.Theme.TextColor)
     ArenaState.RegisterCore(teamConfig.Id, core)
 
-    local itemShop = makePart(
+    local itemShop = WorldBuilder.BuildShopStand(
         folder,
         "ItemShop",
-        Vector3.new(6, 8, 6),
-        CFrame.new(teamConfig.BasePosition + layout.ShopOffset),
-        Color3.fromRGB(61, 82, 118),
-        Enum.Material.SmoothPlastic
+        teamConfig.BasePosition + layout.ShopOffset,
+        Color3.fromRGB(47, 100, 156),
+        "Loja"
     )
     itemShop:SetAttribute("ShopKind", "Items")
     itemShop:SetAttribute("TeamId", teamConfig.Id)
-    addBillboard(itemShop, "ItemBillboard", "Loja", Config.UI.Theme.TextColor)
-    addPrompt(itemShop, "ItemShopPrompt", "Abrir", "Loja")
+    WorldBuilder.AddPrompt(itemShop, "ItemShopPrompt", "Abrir", "Loja")
     ArenaState.RegisterShop(teamConfig.Id, "Items", itemShop)
 
-    local upgradeShop = makePart(
+    local upgradeShop = WorldBuilder.BuildShopStand(
         folder,
         "UpgradeShop",
-        Vector3.new(6, 8, 6),
-        CFrame.new(teamConfig.BasePosition + layout.UpgradeOffset),
-        Color3.fromRGB(88, 74, 128),
-        Enum.Material.SmoothPlastic
+        teamConfig.BasePosition + layout.UpgradeOffset,
+        Color3.fromRGB(116, 79, 168),
+        "Upgrades"
     )
     upgradeShop:SetAttribute("ShopKind", "Upgrades")
     upgradeShop:SetAttribute("TeamId", teamConfig.Id)
-    addBillboard(upgradeShop, "UpgradeBillboard", "Upgrades", Config.UI.Theme.TextColor)
-    addPrompt(upgradeShop, "UpgradeShopPrompt", "Abrir", "Upgrades")
+    WorldBuilder.AddPrompt(upgradeShop, "UpgradeShopPrompt", "Abrir", "Upgrades")
     ArenaState.RegisterShop(teamConfig.Id, "Upgrades", upgradeShop)
 
-    local generatorsFolder = makeFolder(folder, "Generators")
+    local generatorsFolder = WorldBuilder.MakeFolder(folder, "Generators")
 
-    local ironGenerator = makePart(
+    local ironGenerator = WorldBuilder.BuildGenerator(
         generatorsFolder,
         "BaseIron",
-        Vector3.new(4, 1, 4),
-        CFrame.new(teamConfig.BasePosition + layout.IronGeneratorOffset),
-        Color3.fromRGB(210, 217, 224),
-        Enum.Material.Metal
+        teamConfig.BasePosition + layout.IronGeneratorOffset,
+        VisualKit.Global.Iron,
+        "Ferro"
     )
     ironGenerator:SetAttribute("GeneratorType", "BaseIron")
     ironGenerator:SetAttribute("TeamId", teamConfig.Id)
-    addGeneratorLabel(ironGenerator, "Ferro")
 
-    local goldGenerator = makePart(
+    local goldGenerator = WorldBuilder.BuildGenerator(
         generatorsFolder,
         "BaseGold",
-        Vector3.new(4, 1, 4),
-        CFrame.new(teamConfig.BasePosition + layout.GoldGeneratorOffset),
-        Color3.fromRGB(245, 205, 48),
-        Enum.Material.Neon
+        teamConfig.BasePosition + layout.GoldGeneratorOffset,
+        VisualKit.Global.Gold,
+        "Ouro"
     )
     goldGenerator:SetAttribute("GeneratorType", "BaseGold")
     goldGenerator:SetAttribute("TeamId", teamConfig.Id)
-    addGeneratorLabel(goldGenerator, "Ouro")
 
-    local defenseRing = makePart(
+    local defensePad = WorldBuilder.MakePart(
         folder,
         "DefensePad",
-        Vector3.new(24, 1, 20),
+        Vector3.new(28, 0.6, 22),
         CFrame.new(teamConfig.BasePosition + Vector3.new(0, 1, -2)),
-        teamConfig.Color:Lerp(Color3.new(0, 0, 0), 0.25),
-        Enum.Material.SmoothPlastic
+        teamConfig.Color:Lerp(Color3.new(0, 0, 0), 0.18),
+        Enum.Material.SmoothPlastic,
+        { Transparency = 0.42 }
     )
-    defenseRing.Transparency = 0.45
-    defenseRing.CanCollide = true
+    defensePad:SetAttribute("GameplayDecor", true)
 
-    local biomeMarker = makePart(
-        folder,
-        "BiomeMarker",
-        Vector3.new(12, 18, 12),
-        CFrame.new(teamConfig.BasePosition + Vector3.new(0, 9, 28)),
-        biome.AccentColor,
-        Enum.Material.Glass
-    )
-    biomeMarker.Transparency = 0.35
-    biomeMarker.CanCollide = false
+    spawn:SetAttribute("GameplaySpawn", true)
 end
 
 local function buildCenter(root)
-    local centerFolder = makeFolder(root, "Center")
-    buildIsland(centerFolder, WorldData.CenterIsland.Position, WorldData.CenterIsland.Size, Color3.fromRGB(58, 65, 78), Enum.Material.Slate)
+    local centerFolder = WorldBuilder.BuildIsland(root, "Center", WorldData.CenterIsland.Position, WorldData.CenterIsland.Size, CenterKit, {
+        Glow = true,
+    })
 
-    local centerSign = makePart(
-        centerFolder,
-        "CenterSign",
-        Vector3.new(30, 10, 1),
-        CFrame.new(WorldData.CenterIsland.Position + Vector3.new(0, 12, -24)),
-        Config.UI.Theme.AccentColor,
-        Enum.Material.Neon
-    )
-    centerSign.CanCollide = false
-    addSurfaceText(centerSign, Enum.NormalId.Front, "Centro\nEsmeraldas premium", Config.UI.Theme.TextColor)
+    local ring = WorldBuilder.MakePart(centerFolder, "EmeraldRing", Vector3.new(62, 1.2, 62), CFrame.new(WorldData.CenterIsland.Position + Vector3.new(0, 2.4, 0)), VisualKit.Global.Emerald, Enum.Material.Neon, {
+        CanCollide = false,
+        Transparency = 0.62,
+        CastShadow = false,
+    })
+    WorldBuilder.AddPointLight(ring, VisualKit.Global.Emerald, 1.1, 48)
 
-    local generatorsFolder = makeFolder(centerFolder, "Generators")
+    local tower = WorldBuilder.MakePart(centerFolder, "EmeraldTower", Vector3.new(12, 34, 12), CFrame.new(WorldData.CenterIsland.Position + Vector3.new(0, 17, 0)), VisualKit.Global.Emerald, Enum.Material.Glass, {
+        Transparency = 0.2,
+    })
+    WorldBuilder.AddParticles(tower, VisualKit.Global.Emerald, 8, 1.8)
+    WorldBuilder.AddBillboard(tower, "CenterBillboard", "Centro\nEsmeraldas", VisualKit.Global.TextLight, UDim2.fromOffset(240, 80), Vector3.new(0, 24, 0))
+
+    local generatorsFolder = WorldBuilder.MakeFolder(centerFolder, "Generators")
     for index, position in ipairs(WorldData.CenterEmeraldGenerators) do
-        local generator = makePart(
+        local generator = WorldBuilder.BuildGenerator(
             generatorsFolder,
             string.format("MidEmerald%d", index),
-            Vector3.new(4, 1, 4),
-            CFrame.new(WorldData.CenterIsland.Position + position),
-            Color3.fromRGB(23, 226, 154),
-            Enum.Material.Neon
+            WorldData.CenterIsland.Position + position,
+            VisualKit.Global.Emerald,
+            "Esmeralda"
         )
         generator:SetAttribute("GeneratorType", "MidEmerald")
-        addGeneratorLabel(generator, "Esmeralda")
     end
 end
 
 local function buildMidIslands(root)
-    local folder = makeFolder(root, "MidIslands")
+    local folder = WorldBuilder.MakeFolder(root, "MidIslands")
     for _, island in ipairs(WorldData.MidIslands) do
-        buildIsland(folder, island.Position, island.Size, Color3.fromRGB(74, 86, 98), Enum.Material.Rock)
-        local marker = makePart(
-            folder,
-            island.Id .. "Marker",
-            Vector3.new(10, 5, 1),
+        local islandFolder = WorldBuilder.BuildIsland(folder, island.Id, island.Position, island.Size, CenterKit, {
+            Glow = false,
+        })
+        local marker = WorldBuilder.MakePart(
+            islandFolder,
+            "MidRoutePylon",
+            Vector3.new(8, 14, 8),
             CFrame.new(island.Position + Vector3.new(0, 7, -8)),
             Config.UI.Theme.WarningColor,
-            Enum.Material.Neon
+            Enum.Material.Neon,
+            { Transparency = 0.08 }
         )
-        marker.CanCollide = false
-        addSurfaceText(marker, Enum.NormalId.Front, "Esmeralda", Config.UI.Theme.TextColor)
+        WorldBuilder.AddBillboard(marker, "MidLabel", "Rota\nEsmeralda", VisualKit.Global.TextLight, UDim2.fromOffset(170, 58), Vector3.new(0, 10, 0))
 
-        local generator = makePart(
-            folder,
+        local generator = WorldBuilder.BuildGenerator(
+            islandFolder,
             island.Id .. "Generator",
-            Vector3.new(4, 1, 4),
-            CFrame.new(island.Position + Vector3.new(0, 2.5, 0)),
-            Color3.fromRGB(23, 226, 154),
-            Enum.Material.Neon
+            island.Position + Vector3.new(0, 2.5, 0),
+            VisualKit.Global.Emerald,
+            "Esmeralda"
         )
         generator:SetAttribute("GeneratorType", "MidEmerald")
-        addGeneratorLabel(generator, "Esmeralda")
     end
 end
 
 local function buildSpectatorDeck(root)
-    local deck = makePart(
+    local deck = WorldBuilder.MakePart(
         root,
         "SpectatorDeck",
         WorldData.SpectatorDeck.Size,
         CFrame.new(WorldData.SpectatorDeck.Position),
         Color3.fromRGB(35, 42, 56),
-        Enum.Material.Metal
+        Enum.Material.Metal,
+        { Transparency = 0.08 }
     )
-    deck.Transparency = 0.1
+    WorldBuilder.AddBillboard(deck, "SpectatorLabel", "Espectador", VisualKit.Global.TextLight, UDim2.fromOffset(170, 48), Vector3.new(0, 6, 0))
     ArenaState.RegisterSpectatorSpawn(deck)
 end
 
 local function buildArenaBackdrop(root)
-    local backdrop = makeFolder(root, "Backdrop")
+    local backdrop = WorldBuilder.MakeFolder(root, "Backdrop")
     for index, angle in ipairs({ 0, 60, 120, 180, 240, 300 }) do
         local radians = math.rad(angle)
-        local position = Vector3.new(math.cos(radians) * 260, -8, math.sin(radians) * 260)
-        local wall = makePart(
+        local position = Vector3.new(math.cos(radians) * 268, -8, math.sin(radians) * 268)
+        local wall = WorldBuilder.MakePart(
             backdrop,
             "BackdropWall" .. tostring(index),
-            Vector3.new(90, 40, 10),
+            Vector3.new(92, 44, 10),
             CFrame.new(position) * CFrame.Angles(0, radians, 0),
-            Color3.fromRGB(28, 33, 44),
-            Enum.Material.Slate
+            VisualKit.Global.VoidColor,
+            Enum.Material.Slate,
+            { Transparency = 0.12 }
         )
-        wall.Transparency = 0.15
+        WorldBuilder.AddPointLight(wall, Config.UI.Theme.AccentColor, 0.25, 36)
     end
 end
 

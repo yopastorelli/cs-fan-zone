@@ -8,6 +8,7 @@ local RemoteNames = {
     TeamStateUpdated = "TeamStateUpdated",
     InventoryUpdated = "InventoryUpdated",
     AnnouncementPushed = "AnnouncementPushed",
+    FeedbackPushed = "FeedbackPushed",
     ShopOpened = "ShopOpened",
     PurchaseRequested = "PurchaseRequested",
     UpgradeRequested = "UpgradeRequested",

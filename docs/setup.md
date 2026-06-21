@@ -12,4 +12,5 @@ HEALTHCHECK: curl -fsS http://127.0.0.1:34872/ >/dev/null && echo OK
 3. Conectar em localhost:34872.
 4. Rodar Play.
 5. Confirmar spawn no lobby terrestre e HUD de onboarding.
-6. Validar tests/manual-smoke.md.
+6. Validar screenshots de docs/VISUAL_QA.md.
+7. Validar tests/manual-smoke.md.

@@ -2,7 +2,7 @@
 
 ## AI_CONTEXT
 PROJECT_TYPE: Roblox Rojo competitive arena
-PRIMARY_GOAL: 6 duplas, uma por bioma em portugues, com loop BedWars-like seguro e original.
+PRIMARY_GOAL: 6 duplas, uma por bioma em portugues, com loop BedWars-like seguro, original e visual premium.
 LOCAL_ROOT_WSL: /home/danie/projetos/cs-fan-zone
 BUILD_COMMAND: ~/.rokit/bin/rojo build -o build.rbxlx
 SERVE_COMMAND: ~/.rokit/bin/rojo serve
@@ -14,6 +14,8 @@ TEAMS: Planicie, Deserto, Taiga, Selva, Neve, Cogumelos
 OBJECTIVE: destruir o nucleo das outras duplas e ser a ultima dupla viva
 PLAYER_PHASES: Lobby, InMatch, Spectating
 FEATURES: onboarding no lobby, geradores, loja, upgrades, blocos, espada, picareta, respawn, eliminacao final e empate
+VISUAL_SYSTEMS: VisualKit, WorldBuilder, EnvironmentService
+PREMIUM_TARGET: lobby cinematico, biomas com silhueta propria, centro premium, HUD mobile-first
 
 ## SAFETY
 LICENSED_REAL_NAMES: true

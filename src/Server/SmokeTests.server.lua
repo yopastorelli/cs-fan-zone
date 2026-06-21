@@ -8,6 +8,8 @@ end
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local Remotes = require(Shared:WaitForChild("Remotes"))
+local VisualKit = require(Shared:WaitForChild("VisualKit"))
 local WorldData = require(Shared:WaitForChild("WorldData"))
 
 TestService:Check(#Config.Teams == 6, "exactly six teams configured", script, 1)
@@ -57,3 +59,11 @@ TestService:Check(type(Config.UI.HelpMessagesByState.Spectating) == "string", "s
 TestService:Check(type(Config.UI.Results.DrawText) == "string", "draw ui text configured", script, 157)
 TestService:Check(type(Config.Interaction.ShopDistance) == "number" and Config.Interaction.ShopDistance > 0, "shop distance configured", script, 158)
 TestService:Check(type(Config.Interaction.UpgradeDistance) == "number" and Config.Interaction.UpgradeDistance > 0, "upgrade distance configured", script, 159)
+TestService:Check(type(Remotes.Names.FeedbackPushed) == "string", "feedback remote configured", script, 160)
+TestService:Check(type(VisualKit.Biomes.planicie) == "table", "planicie visual kit configured", script, 161)
+TestService:Check(type(VisualKit.Biomes.deserto) == "table", "deserto visual kit configured", script, 162)
+TestService:Check(type(VisualKit.Biomes.taiga) == "table", "taiga visual kit configured", script, 163)
+TestService:Check(type(VisualKit.Biomes.selva) == "table", "selva visual kit configured", script, 164)
+TestService:Check(type(VisualKit.Biomes.neve) == "table", "neve visual kit configured", script, 165)
+TestService:Check(type(VisualKit.Biomes.cogumelos) == "table", "cogumelos visual kit configured", script, 166)
+TestService:Check(type(VisualKit.Lighting) == "table", "lighting kit configured", script, 167)

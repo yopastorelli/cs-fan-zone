@@ -58,6 +58,10 @@ local function createPickup(generatorPart, generatorTypeName)
         if pickup.Parent then
             local added = ArenaState.AddResource(player, pickup:GetAttribute("ResourceType"), pickup:GetAttribute("Amount"))
             if added then
+                ArenaState.PushFeedback(player, "ResourceCollected", {
+                    ResourceType = pickup:GetAttribute("ResourceType"),
+                    Amount = pickup:GetAttribute("Amount"),
+                })
                 pickup:Destroy()
             end
         end

@@ -24,3 +24,15 @@
 15. se todas as duplas morrerem apos `SuddenDeath`, a rodada encerra como empate
 16. ultima dupla viva vence
 17. nao e possivel comprar, melhorar ou colocar bloco no lobby/spectator
+
+## VISUAL_QA
+1. screenshot inicial do lobby nao parece vazio
+2. cada bioma e reconhecivel por silhueta/cor sem ler a placa
+3. centro parece objetivo premium por luz, altura e VFX
+4. loja e upgrades parecem stands diferentes, nao cubos genericos
+5. nucleo fica destacado em pedestal com aura
+6. HUD nao corta texto em viewport desktop
+7. HUD nao corta texto em viewport mobile
+8. loja mostra categorias e estado visual de compra possivel/recusada
+9. coleta de recurso gera feedback visual na HUD
+10. hit/destruicao de nucleo gera anuncio claro

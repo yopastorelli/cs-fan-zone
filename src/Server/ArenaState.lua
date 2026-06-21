@@ -332,6 +332,16 @@ function ArenaState.PushAnnouncement(message, colorName)
     })
 end
 
+function ArenaState.PushFeedback(player, feedbackType, payload)
+    local body = payload or {}
+    body.Type = feedbackType
+    if player then
+        remotes.FeedbackPushed:FireClient(player, body)
+    else
+        remotes.FeedbackPushed:FireAllClients(body)
+    end
+end
+
 function ArenaState.AssignPlayersToTeams(players)
     ArenaState.MatchPlayers = shallowCopyArray(players)
 

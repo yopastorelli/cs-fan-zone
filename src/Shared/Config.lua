@@ -317,7 +317,11 @@ local Config = {
     },
 
     Audio = {
+        PickupSoundId = "rbxassetid://0",
         PurchaseSoundId = "rbxassetid://0",
+        ErrorSoundId = "rbxassetid://0",
+        UpgradeSoundId = "rbxassetid://0",
+        CoreHitSoundId = "rbxassetid://0",
         CoreBreakSoundId = "rbxassetid://0",
         VictorySoundId = "rbxassetid://0",
     },
