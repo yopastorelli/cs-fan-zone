@@ -27,6 +27,8 @@ screenGui.Parent = playerGui
 local uiScale = Instance.new("UIScale")
 uiScale.Parent = screenGui
 
+local onboardingDismissed = false
+
 local function updateScale()
     local camera = Workspace.CurrentCamera
     local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
@@ -163,14 +165,44 @@ for _, resourceType in ipairs({ "Iron", "Gold", "Emerald" }) do
     resourceLabels[resourceType] = { Frame = chip, Label = label }
 end
 
-local onboardingCard = makeFrame(screenGui, "OnboardingCard", UDim2.fromOffset(470, 242), UDim2.new(0.5, 0, 0.54, 0), Vector2.new(0.5, 0.5), theme.BackgroundColor, 0.03)
+local onboardingCard = makeFrame(screenGui, "OnboardingCard", UDim2.fromOffset(360, 210), UDim2.new(0, 18, 0, 92), Vector2.new(0, 0), theme.BackgroundColor, 0.03)
 addPadding(onboardingCard, 16)
-makeLabel(onboardingCard, "OnboardingTitle", Config.UI.Onboarding.Title, UDim2.new(1, 0, 0, 32), UDim2.fromOffset(0, 0), Enum.Font.GothamBlack, 25, theme.TextColor, Enum.TextXAlignment.Center)
-local queueLabel = makeLabel(onboardingCard, "Queue", "Fila: 0/0 jogadores", UDim2.new(1, 0, 0, 28), UDim2.fromOffset(0, 38), Enum.Font.GothamBold, 17, theme.WarningColor, Enum.TextXAlignment.Center)
+makeLabel(onboardingCard, "OnboardingTitle", Config.UI.Onboarding.Title, UDim2.new(1, -94, 0, 28), UDim2.fromOffset(0, 0), Enum.Font.GothamBlack, 22, theme.TextColor, Enum.TextXAlignment.Left)
+
+local onboardingClose = Instance.new("TextButton")
+onboardingClose.Name = "OnboardingClose"
+onboardingClose.Size = UDim2.fromOffset(82, 28)
+onboardingClose.Position = UDim2.new(1, -82, 0, 0)
+onboardingClose.Text = "Fechar"
+onboardingClose.Font = Enum.Font.GothamBold
+onboardingClose.TextSize = 14
+onboardingClose.TextColor3 = theme.TextColor
+onboardingClose.BackgroundColor3 = theme.PanelColor
+onboardingClose.Parent = onboardingCard
+local onboardingCloseCorner = Instance.new("UICorner")
+onboardingCloseCorner.CornerRadius = UDim.new(0, 8)
+onboardingCloseCorner.Parent = onboardingClose
+
+local queueLabel = makeLabel(onboardingCard, "Queue", "Fila: 0/0 jogadores", UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 34), Enum.Font.GothamBold, 16, theme.WarningColor, Enum.TextXAlignment.Left)
 local objectiveRows = {}
 for index, objective in ipairs(Config.UI.Onboarding.Objectives) do
-    objectiveRows[index] = makeLabel(onboardingCard, "Objective" .. index, string.format("%d. %s", index, objective), UDim2.new(1, 0, 0, 28), UDim2.fromOffset(0, 70 + ((index - 1) * 34)), Enum.Font.GothamBold, 16, theme.TextColor)
+    objectiveRows[index] = makeLabel(onboardingCard, "Objective" .. index, string.format("%d. %s", index, objective), UDim2.new(1, 0, 0, 24), UDim2.fromOffset(0, 62 + ((index - 1) * 28)), Enum.Font.GothamBold, 14, theme.TextColor)
 end
+
+local helpToggle = Instance.new("TextButton")
+helpToggle.Name = "HelpToggle"
+helpToggle.Size = UDim2.fromOffset(86, 34)
+helpToggle.Position = UDim2.new(0, 18, 0, 52)
+helpToggle.Text = "Ajuda"
+helpToggle.Font = Enum.Font.GothamBold
+helpToggle.TextSize = 15
+helpToggle.TextColor3 = theme.TextColor
+helpToggle.BackgroundColor3 = theme.PanelColor
+helpToggle.Visible = false
+helpToggle.Parent = screenGui
+local helpToggleCorner = Instance.new("UICorner")
+helpToggleCorner.CornerRadius = UDim.new(0, 8)
+helpToggleCorner.Parent = helpToggle
 
 local countdownCard = makeFrame(screenGui, "CountdownCard", UDim2.fromOffset(390, 170), UDim2.new(0.5, 0, 0.5, 0), Vector2.new(0.5, 0.5), theme.BackgroundColor, 0.02)
 local countdownTitle = makeLabel(countdownCard, "Title", "Partida iniciando", UDim2.new(1, -24, 0, 34), UDim2.fromOffset(12, 18), Enum.Font.GothamBlack, 25, theme.TextColor, Enum.TextXAlignment.Center)
@@ -278,7 +310,8 @@ local function updatePhaseVisibility()
     local showCountdown = showLobby and currentMatchState == "Starting"
     local showCompetitive = currentPhase == "InMatch" or currentPhase == "Spectating"
 
-    onboardingCard.Visible = showLobby and not showCountdown
+    onboardingCard.Visible = showLobby and not showCountdown and not onboardingDismissed
+    helpToggle.Visible = showLobby and not showCountdown and onboardingDismissed
     countdownCard.Visible = showCountdown
     leftPanel.Visible = showCompetitive
     standingsPanel.Visible = showCompetitive
@@ -380,6 +413,16 @@ end
 
 closeButton.MouseButton1Click:Connect(function()
     shopFrame.Visible = false
+end)
+
+onboardingClose.MouseButton1Click:Connect(function()
+    onboardingDismissed = true
+    updatePhaseVisibility()
+end)
+
+helpToggle.MouseButton1Click:Connect(function()
+    onboardingDismissed = false
+    updatePhaseVisibility()
 end)
 
 remotes.ShopOpened.OnClientEvent:Connect(function(payload)

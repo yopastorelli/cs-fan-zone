@@ -10,20 +10,21 @@
 1. `Workspace.CSFanZone` existe
 2. jogador sozinho nasce no `LobbySpawn`, no chao, sem plataforma aerea inicial
 3. em ate 10s o HUD deixa claro objetivo, fila minima e proximo passo
-4. o lobby mostra vista clara da arena, centro e 6 bases: Planicie, Deserto, Taiga, Selva, Neve, Cogumelos
-5. ao iniciar contagem, aparece countdown central e aviso de dupla automatica
-6. em partida, HUD mostra estado, timer, recursos e placar de duplas
-7. geradores soltam pickups de recurso com labels legiveis
-8. loja abre por prompt e compra funciona
-9. upgrades abrem por prompt e aplicam na dupla
-10. espada causa dano em inimigo
-11. picareta danifica nucleo inimigo
-12. la coloca blocos
-13. jogador respawna se o proprio nucleo estiver vivo
-14. jogador vira espectador se o nucleo do proprio time estiver destruido
-15. se todas as duplas morrerem apos `SuddenDeath`, a rodada encerra como empate
-16. ultima dupla viva vence
-17. nao e possivel comprar, melhorar ou colocar bloco no lobby/spectator
+4. card de ajuda no lobby pode ser fechado e reaberto por botao `Ajuda`
+5. o lobby mostra vista clara da arena, centro e 6 bases: Planicie, Deserto, Taiga, Selva, Neve, Cogumelos
+6. ao iniciar contagem, aparece countdown central e aviso de dupla automatica
+7. em partida, HUD mostra estado, timer, recursos e placar de duplas
+8. geradores soltam pickups de recurso com labels legiveis
+9. loja abre por prompt e compra funciona
+10. upgrades abrem por prompt e aplicam na dupla
+11. espada causa dano em inimigo
+12. picareta danifica nucleo inimigo
+13. la coloca blocos
+14. jogador respawna se o proprio nucleo estiver vivo
+15. jogador vira espectador se o nucleo do proprio time estiver destruido
+16. se todas as duplas morrerem apos `SuddenDeath`, a rodada encerra como empate
+17. ultima dupla viva vence
+18. nao e possivel comprar, melhorar ou colocar bloco no lobby/spectator
 
 ## VISUAL_QA
 1. screenshot inicial do lobby nao parece vazio
