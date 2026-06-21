@@ -71,8 +71,8 @@ local function beginRound(players)
             end
         end
         if not assigned then
-            ArenaState.PushFeedback(player, "PurchaseDenied", {
-                Message = "Voce ficou no lobby para completar duplas na proxima rodada.",
+            ArenaState.PushFeedback(player, "InfoMessage", {
+                Message = Config.UI.Messages.OverflowLobby,
             })
         end
     end

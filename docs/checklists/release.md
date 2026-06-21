@@ -2,16 +2,24 @@
 
 - [ ] `~/.rokit/bin/rojo build -o build.rbxlx` passa
 - [ ] `~/.rokit/bin/rojo serve` responde em `127.0.0.1:34872`
-- [ ] 6 duplas aparecem com biomas em portugues
+- [ ] `1 jogador`: lobby explica objetivo, fila e formato previsto
+- [ ] `4 jogadores`: rodada ativa exatamente `2 duplas`
+- [ ] `6/8/10 jogadores`: numero de duplas ativas acompanha a populacao
+- [ ] `12 jogadores`: as `6 duplas` aparecem com biomas em portugues
 - [ ] roster autorizado aparece corretamente: Bern/Caduxinn, Chip/Feuripe, Fixz/Ligonz, Mendrake/Muca, Nait/Pedrux, Geleia/Tonigon
 - [ ] spawn inicial acontece no lobby terrestre e nao no deck aereo
+- [ ] late join fica no lobby e recebe explicacao correta
 - [ ] lobby inicial passa no screenshot de primeira impressao
+- [ ] bases ativas e bases reserva sao distinguiveis sem parecer bug
 - [ ] seis biomas sao reconheciveis sem depender apenas de texto
 - [ ] centro parece objetivo premium por composicao, luz e VFX
 - [ ] UI passa em desktop e viewport mobile sem texto cortado
+- [ ] onboarding, ribbon, anuncio e standings nao competem entre si
 - [ ] geradores entregam ferro, ouro e esmeralda
+- [ ] geradores e prompts de bases reserva nao participam da rodada
 - [ ] loja compra item com saldo e falha sem saldo
 - [ ] loja mostra categorias e disponibilidade visual
+- [ ] compras e upgrades locais nao geram spam global desnecessario
 - [ ] nao e possivel comprar ou melhorar fora da propria base e fora da partida
 - [ ] upgrades afetam toda a dupla
 - [ ] `protection` reduz dano recebido
@@ -21,3 +29,4 @@
 - [ ] empate encerra a rodada corretamente quando nao sobra dupla viva
 - [ ] zero erros vermelhos por 5 minutos
 - [ ] somente os nomes licenciados do roster foram usados; logos, vozes, slogans e branding externo continuam ausentes
+- [ ] docs/AI_HANDOFF.md, docs/UI_UX_SPEC.md e tests/manual-smoke.md refletem o estado atual do branch

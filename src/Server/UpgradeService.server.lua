@@ -30,9 +30,8 @@ remotes.UpgradeRequested.OnServerEvent:Connect(function(player, payload)
     local shopPart = ArenaState.GetShopPart(player, "Upgrades")
     local ok, reason = ArenaState.CanUseShop(player, shopPart)
     if not ok then
-        ArenaState.PushAnnouncement(reason or "Upgrade recusado", "Warning")
         ArenaState.PushFeedback(player, "PurchaseDenied", {
-            Message = reason or "Upgrade recusado",
+            Message = reason or Config.UI.Messages.UpgradeDenied,
         })
         return
     end
@@ -46,27 +45,25 @@ remotes.UpgradeRequested.OnServerEvent:Connect(function(player, payload)
     local nextLevel = currentLevel + 1
     local cost = upgrade.TierCosts[nextLevel]
     if not cost then
-        ArenaState.PushAnnouncement(upgrade.DisplayName .. " ja esta no maximo", "Warning")
         ArenaState.PushFeedback(player, "PurchaseDenied", {
-            Message = "Upgrade no maximo",
+            Message = Config.UI.Messages.UpgradeMax,
             UpgradeId = upgrade.Id,
         })
         return
     end
 
     if not ArenaState.SpendResource(player, upgrade.ResourceType, cost) then
-        ArenaState.PushAnnouncement(player.Name .. " nao tem recurso para " .. upgrade.DisplayName, "Warning")
         ArenaState.PushFeedback(player, "PurchaseDenied", {
-            Message = "Recurso insuficiente",
+            Message = Config.UI.Messages.UpgradeInsufficient,
             UpgradeId = upgrade.Id,
         })
         return
     end
 
     ArenaState.AdvanceUpgrade(playerState.TeamId, upgrade.Id)
-    ArenaState.PushAnnouncement(player.Name .. " melhorou " .. upgrade.DisplayName, "Success")
     ArenaState.PushFeedback(player, "UpgradeApplied", {
         UpgradeId = upgrade.Id,
         DisplayName = upgrade.DisplayName,
+        Message = string.format(Config.UI.Messages.UpgradeSuccess, upgrade.DisplayName),
     })
 end)

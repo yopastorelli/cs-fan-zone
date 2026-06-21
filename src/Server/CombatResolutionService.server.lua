@@ -14,14 +14,14 @@ while true do
             local winningTeam = remainingTeams[1]
             ArenaState.RecordWin(winningTeam.Id)
             ArenaState.SetMatchResult("Victory", winningTeam.Id)
-            ArenaState.PushAnnouncement(winningTeam.DisplayName .. " venceu a rodada", "Success")
+            ArenaState.PushAnnouncement(string.format(Config.UI.Messages.VictoryAnnouncement, winningTeam.DisplayName), "Success")
             ArenaState.SetMatchState("Ended", Config.Match.PostMatchSeconds, {
                 EndReason = "Victory",
                 WinningTeamId = winningTeam.Id,
             })
         elseif #remainingTeams == 0 then
             ArenaState.SetMatchResult("Draw", nil)
-            ArenaState.PushAnnouncement("Empate. Nenhuma dupla sobreviveu.", "Warning")
+            ArenaState.PushAnnouncement(Config.UI.Messages.DrawAnnouncement, "Warning")
             ArenaState.SetMatchState("Ended", Config.Match.PostMatchSeconds, {
                 EndReason = "Draw",
                 WinningTeamId = nil,

@@ -30,7 +30,9 @@ local function connectPrompt(prompt)
         local shopPart = prompt.Parent
         local ok, reason = ArenaState.CanUseShop(player, shopPart)
         if not ok then
-            ArenaState.PushAnnouncement(reason or "Acesso negado a loja", "Warning")
+            ArenaState.PushFeedback(player, "PurchaseDenied", {
+                Message = reason or Config.UI.Messages.ShopAccessDenied,
+            })
             return
         end
 
@@ -51,17 +53,15 @@ remotes.PurchaseRequested.OnServerEvent:Connect(function(player, payload)
     local shopPart = ArenaState.GetShopPart(player, "Items")
     local ok, reason = ArenaState.CanUseShop(player, shopPart)
     if not ok then
-        ArenaState.PushAnnouncement(reason or "Compra recusada", "Warning")
         ArenaState.PushFeedback(player, "PurchaseDenied", {
-            Message = reason or "Compra recusada",
+            Message = reason or Config.UI.Messages.PurchaseDenied,
         })
         return
     end
 
     if not ArenaState.CanAfford(player, item.ResourceType, item.Cost) then
-        ArenaState.PushAnnouncement(player.Name .. " nao tem saldo para " .. item.DisplayName, "Warning")
         ArenaState.PushFeedback(player, "PurchaseDenied", {
-            Message = "Saldo insuficiente",
+            Message = Config.UI.Messages.InsufficientFunds,
             ItemId = item.Id,
         })
         return
@@ -74,18 +74,17 @@ remotes.PurchaseRequested.OnServerEvent:Connect(function(player, payload)
     local granted, err = ToolFactory.GrantItem(player, item)
     if not granted then
         ArenaState.AddResource(player, item.ResourceType, item.Cost)
-        ArenaState.PushAnnouncement(err or "Falha ao entregar item", "Danger")
         ArenaState.PushFeedback(player, "PurchaseDenied", {
-            Message = err or "Falha ao entregar item",
+            Message = err or Config.UI.Messages.DeliveryFailed,
             ItemId = item.Id,
         })
         return
     end
 
-    ArenaState.PushAnnouncement(player.Name .. " comprou " .. item.DisplayName, "Success")
     ArenaState.PushFeedback(player, "PurchaseSuccess", {
         ItemId = item.Id,
         DisplayName = item.DisplayName,
+        Message = string.format(Config.UI.Messages.PurchaseSuccess, item.DisplayName),
     })
 end)
 

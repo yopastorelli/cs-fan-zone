@@ -659,6 +659,9 @@ remotes.FeedbackPushed.OnClientEvent:Connect(function(payload)
     elseif payload.Type == "PurchaseSuccess" then
         pulse(shopFrame, theme.SuccessColor)
         playConfiguredSound(Config.Audio.PurchaseSoundId)
+        if payload.Message then
+            showAnnouncement(payload.Message, theme.SuccessColor, 2.5)
+        end
         if payload.ItemId == Config.UI.StarterRecommendations.PickaxeItemId and not seenFeedbackHints.FirstPickaxe then
             seenFeedbackHints.FirstPickaxe = true
             showAnnouncement(Config.UI.Hints.FirstPickaxe, theme.AccentColor, 4)
@@ -670,6 +673,11 @@ remotes.FeedbackPushed.OnClientEvent:Connect(function(payload)
     elseif payload.Type == "UpgradeApplied" then
         pulse(leftPanel, theme.SuccessColor)
         playConfiguredSound(Config.Audio.UpgradeSoundId)
+        if payload.Message then
+            showAnnouncement(payload.Message, theme.SuccessColor, 2.5)
+        end
+    elseif payload.Type == "InfoMessage" then
+        showAnnouncement(payload.Message or "", theme.AccentColor, 3.5)
     elseif payload.Type == "CoreHit" then
         showAnnouncement("Nucleo sob ataque", theme.WarningColor, 2.5)
         playConfiguredSound(Config.Audio.CoreHitSoundId)
