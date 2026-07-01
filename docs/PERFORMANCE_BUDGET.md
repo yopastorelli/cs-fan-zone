@@ -1,32 +1,49 @@
 # AI_PERFORMANCE_BUDGET
 
-TARGET: public alpha that remains playable on common Roblox mobile devices
+BASELINE: mobile fraco
+DEFAULT_TIER: `Low`
+OPTIONAL_TIER: `Standard`
 
-## WORLD_BUDGET
-- prefer anchored static Parts
-- keep decorative props simple and reusable
-- avoid unnecessary MeshPart or Terrain in this phase
-- cap permanent ParticleEmitters to purposeful generator/core/center effects
-- cap always-on BillboardGui to gameplay-critical labels only
-- avoid server per-frame visual loops
-- keep collision simple on decorative props
+## LOW_TIER_BUDGET
+- `Technology`: `ShadowMap`
+- `ScreenGui`: `1`
+- `PointLight` permanentes: max `20`
+- `ParticleEmitter` permanentes: max `12`
+- `BillboardGui` sempre visíveis: max `12`
+- `SurfaceGui` duplos: max `28`
+- `SunRays`: desligado
+- `Bloom`: apenas suporte leve de profundidade, nunca highlight principal
+- `IslandGlow`: desligado
+- `PureDecor` com luz/partícula: desligado por default
 
-## UI_BUDGET
-- one main ScreenGui
-- avoid rebuilding full HUD every frame
-- update UI only from remote events or state changes
-- avoid excessive TextScaled on dense panels
-- use layout objects instead of manual repositioning where practical
+## STANDARD_TIER_BUDGET
+- `Technology`: `Future`
+- `PointLight` permanentes: max `34`
+- `ParticleEmitter` permanentes: max `20`
+- `BillboardGui` sempre visíveis: max `18`
+- `SurfaceGui` duplos: max `36`
+- `SunRays`: permitido
+- `IslandGlow`: permitido
+- `PureDecor` com luz/partícula: permitido de forma seletiva
 
-## VFX_AUDIO_BUDGET
-- client-side cosmetic effects when possible
-- short-lived flashes/pulses only
-- placeholder sound IDs remain `rbxassetid://0` until licensed assets are selected
-- every external asset must be registered in `docs/asset-register.md`
+## PRIORITY_RULES
+- `GameplayCritical`: totem, esmeralda premium, leitura de gerador, feedback de objetivo
+- `ReadabilitySupport`: beacon de rota, shrine premium, reforco de navegacao
+- `PureDecor`: backdrop glow, luz cenica, partícula ambiente, enfeite sem impacto de leitura
+- em `Low`, `PureDecor` e o primeiro alvo de corte
+- em qualquer tier, decoracao nunca pode bloquear spawn, loja, upgrade, rota, totem ou gerador
+
+## MATERIAL_RULES
+- preferir `Rock`, `Ground`, `Grass`, `Sand`, `Snow`, `Mud`, `WoodPlanks`, `Slate`
+- limitar `SmoothPlastic` a placas, trim, totens e elementos de contraste
+- limitar `Neon` a esmeralda premium, destaque de totem e pontos de recompensa
+- evitar superficies grandes com transparencia
 
 ## VALIDATION
 - `~/.rokit/bin/rojo build -o build.rbxlx`
 - `~/.rokit/bin/rojo serve`
-- Studio Play desktop for 5 minutes with zero red errors
-- Studio mobile viewport check for HUD clipping
-- screenshot checklist in `docs/VISUAL_QA.md`
+- alternar `Config.Visual.VisualQualityDefault` entre `Low` e `Standard` para comparativo controlado
+- Studio Play desktop por `5 min` sem erros vermelhos
+- viewport mobile sem clipping e sem perder leitura das rotas
+- screenshots comparativos `Low` vs `Standard` para: lobby, Neve, Centro
+- `SmokeTests.server.lua` valida contagem de `PointLight`, `ParticleEmitter`, `BillboardGui`, `SurfaceGui`, bases, triggers do meio e geradores centrais

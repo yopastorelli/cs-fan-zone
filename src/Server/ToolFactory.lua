@@ -6,6 +6,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 
 local ArenaState = require(script.Parent:WaitForChild("ArenaState"))
+local TelemetryService = require(script.Parent:WaitForChild("TelemetryService"))
 
 local ToolFactory = {}
 
@@ -78,6 +79,35 @@ local function canUseMatchTool(player, humanoid)
     return player and humanoid and humanoid.Health > 0 and ArenaState.IsPlayerInMatch(player)
 end
 
+local function canUseCombatTool(player, humanoid)
+    return canUseMatchTool(player, humanoid) and not ArenaState.IsSpawnProtected(player)
+end
+
+local function pushCoreHitFeedback(attacker, targetTeamId, remainingHealth)
+    ArenaState.PushFeedback(attacker, "CoreHit", {
+        TeamId = targetTeamId,
+        AttackerName = attacker.Name,
+        RemainingHealth = remainingHealth,
+        Role = "Attacker",
+    })
+
+    local targetTeam = ArenaState.Teams[targetTeamId]
+    if not targetTeam then
+        return
+    end
+
+    for _, member in ipairs(targetTeam.Members) do
+        if member ~= attacker and member.Parent then
+            ArenaState.PushFeedback(member, "CoreHit", {
+                TeamId = targetTeamId,
+                AttackerName = attacker.Name,
+                RemainingHealth = remainingHealth,
+                Role = "Defender",
+            })
+        end
+    end
+end
+
 function ToolFactory.CreateSwordTool(teamId, itemConfig)
     local tool = Instance.new("Tool")
     tool.Name = itemConfig.DisplayName
@@ -97,7 +127,7 @@ function ToolFactory.CreateSwordTool(teamId, itemConfig)
 
         local player = getPlayerFromTool(tool)
         local _, humanoid, rootPart = getCharacterRoot(tool)
-        if not canUseMatchTool(player, humanoid) then
+        if not canUseCombatTool(player, humanoid) then
             return
         end
 
@@ -111,6 +141,12 @@ function ToolFactory.CreateSwordTool(teamId, itemConfig)
                 damage += Config.TeamUpgrades.Items[1].EffectValues[teamLevel]
             end
             if enemyPlayer then
+                if ArenaState.IsSpawnProtected(enemyPlayer) then
+                    task.delay(Config.Combat.SwordCooldownSeconds, function()
+                        swinging = false
+                    end)
+                    return
+                end
                 local enemyState = ArenaState.GetPlayerState(enemyPlayer)
                 local reduction = enemyState.TeamId and ArenaState.GetDamageReduction(enemyState.TeamId) or 0
                 damage = math.max(1, math.floor(damage * (1 - reduction)))
@@ -146,7 +182,7 @@ function ToolFactory.CreatePickaxeTool(teamId, itemConfig)
 
         local player = getPlayerFromTool(tool)
         local _, humanoid, rootPart = getCharacterRoot(tool)
-        if not canUseMatchTool(player, humanoid) then
+        if not canUseCombatTool(player, humanoid) then
             return
         end
 
@@ -156,9 +192,10 @@ function ToolFactory.CreatePickaxeTool(teamId, itemConfig)
         local targetCore = nil
 
         for otherTeamId, corePart in pairs(ArenaState.CoreInstances) do
-            if otherTeamId ~= playerState.TeamId and corePart.Parent then
+            if otherTeamId ~= playerState.TeamId and ArenaState.IsTeamActive(otherTeamId) and corePart.Parent then
                 local offset = corePart.Position - rootPart.Position
-                if offset.Magnitude <= Config.Combat.PickaxeHitRange and rootPart.CFrame.LookVector:Dot(offset.Unit) >= 0.15 then
+                local distance = offset.Magnitude
+                if distance > 0 and distance <= Config.Combat.PickaxeHitRange and rootPart.CFrame.LookVector:Dot(offset.Unit) >= 0.15 then
                     targetTeamId = otherTeamId
                     targetCore = corePart
                     break
@@ -167,21 +204,18 @@ function ToolFactory.CreatePickaxeTool(teamId, itemConfig)
         end
 
         if targetTeamId and targetCore then
-            local _, remainingHealth = ArenaState.DamageCore(targetTeamId, Config.Match.CoreDamagePerHit)
-            if remainingHealth <= 0 then
+            local damaged, remainingHealth = ArenaState.DamageCore(targetTeamId, Config.Match.CoreDamagePerHit)
+            if damaged and remainingHealth <= 0 then
                 ArenaState.RecordCoreBreak(player)
-                ArenaState.PushAnnouncement(string.format("%s destruiu o nucleo da %s", player.Name, ArenaState.Teams[targetTeamId].DisplayName), "Danger")
+                TelemetryService.TrackOneShot(player, "ftue_destroy_totem")
+                ArenaState.PushAnnouncement(string.format("%s destruiu o totem da %s", player.Name, ArenaState.Teams[targetTeamId].DisplayName), "Danger")
                 ArenaState.PushFeedback(nil, "CoreDestroyed", {
                     TeamId = targetTeamId,
                     AttackerName = player.Name,
                 })
-            else
-                ArenaState.PushAnnouncement(string.format("%s acertou um nucleo inimigo", player.Name), "Warning")
-                ArenaState.PushFeedback(nil, "CoreHit", {
-                    TeamId = targetTeamId,
-                    AttackerName = player.Name,
-                    RemainingHealth = remainingHealth,
-                })
+            elseif damaged then
+                TelemetryService.TrackOneShot(player, "ftue_hit_totem")
+                pushCoreHitFeedback(player, targetTeamId, remainingHealth)
             end
         else
             local bounds = Workspace:GetPartBoundsInBox(rootPart.CFrame + (rootPart.CFrame.LookVector * 6), Vector3.new(6, 6, 6))
@@ -280,7 +314,12 @@ function ToolFactory.CreateBlockTool(teamId, itemConfig)
 
         local occupancy = Workspace:GetPartBoundsInBox(CFrame.new(snapped), Vector3.new(3.6, 3.6, 3.6))
         for _, part in ipairs(occupancy) do
-            if part.CanCollide and part.Transparency < 1 and part.Parent ~= tool.Parent then
+            if part.Parent ~= tool.Parent
+                and part.CanCollide
+                and part.Transparency < 1
+                and part:GetAttribute("GameplayDecor") ~= true
+                and part:GetAttribute("SafeZone") ~= true
+            then
                 placing = false
                 return
             end
@@ -296,6 +335,8 @@ function ToolFactory.CreateBlockTool(teamId, itemConfig)
         block:SetAttribute("PlacedBlock", true)
         block:SetAttribute("OwnerTeamId", teamId)
         block.Parent = Workspace:WaitForChild("CSFanZone")
+
+        ArenaState.MarkFirstBridgeBuilt(player)
 
         charges -= 1
         tool:SetAttribute("Charges", charges)

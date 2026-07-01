@@ -7,6 +7,7 @@ local Config = require(Shared:WaitForChild("Config"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 
 local ArenaState = require(script.Parent:WaitForChild("ArenaState"))
+local TelemetryService = require(script.Parent:WaitForChild("TelemetryService"))
 
 local remotes = Remotes.GetAll()
 
@@ -15,6 +16,7 @@ local function onHumanoidDied(player, humanoid)
     if not playerState.InMatch then
         return
     end
+    local deathRoundToken = ArenaState.GetRoundToken()
 
     ArenaState.MarkPlayerDead(player)
     ArenaState.ClearPlayerLoadout(player)
@@ -30,7 +32,13 @@ local function onHumanoidDied(player, humanoid)
             Spectating = false,
         })
         task.delay(Config.Match.RespawnSeconds, function()
-            if player.Parent and playerState.TeamId and ArenaState.IsCoreAlive(playerState.TeamId) then
+            if ArenaState.GetRoundToken() ~= deathRoundToken then
+                return
+            end
+            if ArenaState.MatchState ~= "Active" and ArenaState.MatchState ~= "SuddenDeath" then
+                return
+            end
+            if player.Parent and playerState.TeamId and playerState.InMatch and not playerState.Spectating and ArenaState.IsCoreAlive(playerState.TeamId) then
                 ArenaState.ApplyRespawnLocation(player)
                 player:LoadCharacter()
             end
@@ -42,7 +50,13 @@ local function onHumanoidDied(player, humanoid)
             Spectating = true,
         })
         task.delay(2, function()
-            if player.Parent then
+            if ArenaState.GetRoundToken() ~= deathRoundToken then
+                return
+            end
+            if ArenaState.MatchState ~= "Active" and ArenaState.MatchState ~= "SuddenDeath" and ArenaState.MatchState ~= "Ended" then
+                return
+            end
+            if player.Parent and ArenaState.IsPlayerSpectating(player) then
                 ArenaState.ApplyRespawnLocation(player)
                 player:LoadCharacter()
             end
@@ -61,22 +75,27 @@ local function setupCharacter(player, character)
     end)
 
     if playerState.Spectating then
+        player:SetAttribute("SpawnProtectedUntil", 0)
         task.defer(function()
             ArenaState.ApplyRespawnLocation(player)
             ArenaState.TeleportPlayerToSpectator(player)
         end)
         rootPart.CanCollide = true
     elseif playerState.InLobby then
+        player:SetAttribute("SpawnProtectedUntil", 0)
         task.defer(function()
             ArenaState.ApplyRespawnLocation(player)
             ArenaState.TeleportPlayerToLobby(player)
             ArenaState.BroadcastMatchState()
             ArenaState.BroadcastTeamState(player)
+            TelemetryService.TrackOneShot(player, "ftue_spawn_lobby")
+            TelemetryService.TrackFunnelStep(player, 1, "spawn_lobby", "ftue_spawn_lobby")
         end)
     elseif playerState.InMatch then
         task.defer(function()
             ArenaState.ApplyRespawnLocation(player)
             ArenaState.TeleportPlayerToBase(player)
+            ArenaState.SetSpawnProtection(player)
             ArenaState.MarkPlayerAlive(player)
             ArenaState.BroadcastMatchState()
         end)

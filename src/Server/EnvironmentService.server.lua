@@ -2,12 +2,15 @@ local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
 local VisualKit = require(Shared:WaitForChild("VisualKit"))
 
-local lighting = VisualKit.Lighting
+local requestedTier = (Config.Visual and Config.Visual.VisualQualityDefault) or "Low"
+local qualityTier = VisualKit.QualityTiers[requestedTier] and requestedTier or "Low"
+local lighting = VisualKit.LightingPresets[qualityTier]
 
 pcall(function()
-    Lighting.Technology = Enum.Technology.Future
+    Lighting.Technology = VisualKit.QualityTiers[qualityTier].Technology
 end)
 
 Lighting.ClockTime = lighting.ClockTime
@@ -34,8 +37,8 @@ local atmosphere = ensureEffect("Atmosphere", "CSFanZoneAtmosphere")
 atmosphere.Color = lighting.AtmosphereColor
 atmosphere.Decay = lighting.AtmosphereDecay
 atmosphere.Density = lighting.AtmosphereDensity
-atmosphere.Haze = 0.78
-atmosphere.Glare = 0.04
+atmosphere.Haze = lighting.AtmosphereHaze
+atmosphere.Glare = lighting.AtmosphereGlare
 
 local bloom = ensureEffect("BloomEffect", "CSFanZoneBloom")
 bloom.Intensity = lighting.BloomIntensity
@@ -45,8 +48,8 @@ bloom.Threshold = lighting.BloomThreshold
 local colorCorrection = ensureEffect("ColorCorrectionEffect", "CSFanZoneColor")
 colorCorrection.Contrast = lighting.Contrast
 colorCorrection.Saturation = lighting.Saturation
-colorCorrection.TintColor = Color3.fromRGB(255, 255, 255)
+colorCorrection.TintColor = lighting.TintColor
 
 local sunRays = ensureEffect("SunRaysEffect", "CSFanZoneSunRays")
-sunRays.Intensity = 0.012
-sunRays.Spread = 0.64
+sunRays.Intensity = VisualKit.QualityTiers[qualityTier].UseSunRays and lighting.SunRaysIntensity or 0
+sunRays.Spread = lighting.SunRaysSpread

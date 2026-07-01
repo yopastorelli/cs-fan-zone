@@ -29,7 +29,7 @@ local function onPlayerAdded(player)
     getOrCreateIntValue(leaderstats, "Kills").Value = 0
     getOrCreateIntValue(leaderstats, "FinalKills").Value = 0
     getOrCreateIntValue(leaderstats, "Wins").Value = 0
-    getOrCreateIntValue(leaderstats, "CoresBroken").Value = 0
+    getOrCreateIntValue(leaderstats, "TotemsBroken").Value = 0
 
     player:SetAttribute("TeamId", "")
     player:SetAttribute("CoreAlive", false)

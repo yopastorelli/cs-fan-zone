@@ -18,28 +18,6 @@ local function getItemById(itemId)
     return nil
 end
 
-local function openShop(player, kind)
-    remotes.ShopOpened:FireClient(player, {
-        Kind = kind,
-        Items = kind == "Items" and Config.Shop.Items or Config.TeamUpgrades.Items,
-    })
-end
-
-local function connectPrompt(prompt)
-    prompt.Triggered:Connect(function(player)
-        local shopPart = prompt.Parent
-        local ok, reason = ArenaState.CanUseShop(player, shopPart)
-        if not ok then
-            ArenaState.PushFeedback(player, "PurchaseDenied", {
-                Message = reason or Config.UI.Messages.ShopAccessDenied,
-            })
-            return
-        end
-
-        openShop(player, shopPart:GetAttribute("ShopKind"))
-    end)
-end
-
 remotes.PurchaseRequested.OnServerEvent:Connect(function(player, payload)
     if typeof(payload) ~= "table" or typeof(payload.ItemId) ~= "string" then
         return
@@ -86,11 +64,11 @@ remotes.PurchaseRequested.OnServerEvent:Connect(function(player, payload)
         DisplayName = item.DisplayName,
         Message = string.format(Config.UI.Messages.PurchaseSuccess, item.DisplayName),
     })
-end)
-
-local world = workspace:WaitForChild("CSFanZone")
-for _, descendant in ipairs(world:GetDescendants()) do
-    if descendant:IsA("ProximityPrompt") and (descendant.Name == "ItemShopPrompt" or descendant.Name == "UpgradeShopPrompt") then
-        connectPrompt(descendant)
+    ArenaState.MarkStarterPurchase(player, item.Id)
+    if item.Id == Config.UI.StarterFlow.First or item.Id == Config.UI.StarterFlow.Second or item.Id == Config.UI.StarterFlow.Third then
+        ArenaState.PushFeedback(player, "FirstStarterPurchase", {
+            ItemId = item.Id,
+            DisplayName = item.DisplayName,
+        })
     end
-end
+end)

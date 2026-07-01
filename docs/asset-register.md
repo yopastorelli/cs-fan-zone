@@ -5,6 +5,7 @@ Register every external asset before importing it into Roblox Studio.
 | ID | Asset name | Source | URL | Author | License | Date checked | Project use | Notes |
 |---|---|---|---|---|---|---|---|---|
 | internal-parts-001 | Arena world geometry | Generated in code | n/a | Project | Original | 2026-06-21 | Bases, center island, generators, shops, cores, HUD-linked stands | Built from Roblox instances only |
+| roblox-built-in-audio-001 | Short UI feedback sounds | Roblox built-in runtime files | `rbxasset://sounds/...` | Roblox | Roblox platform built-in | 2026-06-30 | Pickup, purchase, error, upgrade, totem hit/break, victory feedback | No external upload or third-party asset imported |
 
 ## Allowed by default
 

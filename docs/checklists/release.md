@@ -3,30 +3,57 @@
 - [ ] `~/.rokit/bin/rojo build -o build.rbxlx` passa
 - [ ] `~/.rokit/bin/rojo serve` responde em `127.0.0.1:34872`
 - [ ] `1 jogador`: lobby explica objetivo, fila e formato previsto
-- [ ] `4 jogadores`: rodada ativa exatamente `2 duplas`
-- [ ] `6/8/10 jogadores`: numero de duplas ativas acompanha a populacao
-- [ ] `12 jogadores`: as `6 duplas` aparecem com biomas em portugues
-- [ ] roster autorizado aparece corretamente: Bern/Caduxinn, Chip/Feuripe, Fixz/Ligonz, Mendrake/Muca, Nait/Pedrux, Geleia/Tonigon
+- [ ] `1 jogador`: preview de base no lobby ensina totem, ferro, ouro, loja e saidas
+- [ ] `2 jogadores`: rodada ativa exatamente `1v1` com Planicie e Selva
+- [ ] `3 jogadores`: apenas 2 entram na rodada e o terceiro permanece no lobby
+- [ ] `3 jogadores`: a rodada seguinte prioriza quem ficou no lobby
+- [ ] `4 jogadores`: rodada ativa como `2 duplas`, com 2 jogadores por time
+- [ ] `5 jogadores`: 4 entram como `2 duplas` e o quinto permanece no lobby
+- [ ] `6 jogadores`: rodada ativa como `3 duplas`
+- [ ] `6 bases`: todos os biomas aparecem em portugues, e apenas os times do formato atual ficam ativos
+- [ ] nenhum nome real, logo, voz, slogan ou avatar reconhecivel aparece no jogo
 - [ ] spawn inicial acontece no lobby terrestre e nao no deck aereo
+- [ ] spawn inicial olha para a arena e nao para o verso de placas
+- [ ] tier `Low` continua legivel e bonito no viewport mobile
+- [ ] tier `Standard` so adiciona polish; nao muda a leitura principal
 - [ ] late join fica no lobby e recebe explicacao correta
 - [ ] lobby inicial passa no screenshot de primeira impressao
+- [ ] saidas de rota deixam claro o trajeto `base -> Ilha do Meio -> Centro` sem depender de texto
+- [ ] nao existe ponte permanente de combate ligando base a Ilha do Meio ou Centro
 - [ ] bases ativas e bases reserva sao distinguiveis sem parecer bug
+- [ ] bases reserva nao aceitam dano no totem, prompts de loja ou geradores de base durante a rodada
 - [ ] seis biomas sao reconheciveis sem depender apenas de texto
+- [ ] corredor Planicie/Selva fica mais curto e destacado para o formato solo
 - [ ] centro parece objetivo premium por composicao, luz e VFX
+- [ ] `ShadowMap` atende o baseline visual do alpha em mobile fraco
+- [ ] leitura de esmeralda fica clara em `6 Ilhas do Meio + 3 Centro`
 - [ ] UI passa em desktop e viewport mobile sem texto cortado
 - [ ] onboarding, ribbon, anuncio e standings nao competem entre si
+- [ ] cartao central da missao mostra o passo atual com clareza
+- [ ] funnel FTUE cobre `spawn -> ferro -> loja -> blocos -> ponte -> Ilha do Meio -> esmeralda`
+- [ ] fluxo starter usa os custos reais da loja; sem hardcode antigo em HUD/servidor
+- [ ] signage do lobby reflete fila e estado real da rodada
+- [ ] evento de ajuda (`Ajuda`) pode ser reaberto sem quebrar o fluxo
 - [ ] geradores entregam ferro, ouro e esmeralda
+- [ ] o passo guiado real avanca em ordem: ferro -> loja -> blocos -> ponte -> esmeralda
+- [ ] a loja destaca um unico item `AGORA` quando a recomendacao existe
 - [ ] geradores e prompts de bases reserva nao participam da rodada
 - [ ] loja compra item com saldo e falha sem saldo
 - [ ] loja mostra categorias e disponibilidade visual
 - [ ] compras e upgrades locais nao geram spam global desnecessario
 - [ ] nao e possivel comprar ou melhorar fora da propria base e fora da partida
-- [ ] upgrades afetam toda a dupla
+- [ ] upgrades afetam o time do jogador
 - [ ] `protection` reduz dano recebido
-- [ ] nucleo destruido bloqueia respawn
-- [ ] nucleo hit/destruicao geram feedback visual claro
-- [ ] ultima dupla viva recebe vitoria
-- [ ] empate encerra a rodada corretamente quando nao sobra dupla viva
+- [ ] totem destruido bloqueia respawn
+- [ ] spawn protection curta funciona no respawn e evita dano competitivo imediato
+- [ ] hit/destruicao de totem geram feedback visual claro
+- [ ] coleta, compra, erro, upgrade, hit de totem, quebra de totem e vitoria geram som curto
+- [ ] ultimo time vivo recebe vitoria
+- [ ] empate encerra a rodada corretamente quando nao sobra time vivo
 - [ ] zero erros vermelhos por 5 minutos
-- [ ] somente os nomes licenciados do roster foram usados; logos, vozes, slogans e branding externo continuam ausentes
+- [ ] rebuild/sync do mundo nao quebra prompts, geradores ou triggers do meio
+- [ ] `SuddenDeath` atrasado de rodada antiga nao afeta rodada nova
+- [ ] `SuddenDeath` afeta somente os dois times ativos
+- [ ] respawn atrasado de rodada antiga nao reposiciona jogador na fase errada
+- [ ] somente labels ficcionais de times/biomas foram usados; logos, vozes, slogans e branding externo continuam ausentes
 - [ ] docs/AI_HANDOFF.md, docs/UI_UX_SPEC.md e tests/manual-smoke.md refletem o estado atual do branch

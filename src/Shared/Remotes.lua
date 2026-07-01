@@ -13,6 +13,7 @@ local RemoteNames = {
     PurchaseRequested = "PurchaseRequested",
     UpgradeRequested = "UpgradeRequested",
     RespawnStateUpdated = "RespawnStateUpdated",
+    TelemetryRequested = "TelemetryRequested",
 }
 
 local function ensureFolder()

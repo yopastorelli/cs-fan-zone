@@ -1,46 +1,39 @@
 # AI_ART_DIRECTION
 
 PROJECT: CS Fan Zone Arena
-TARGET: premium Roblox public alpha
-VISUAL_THEME: arena flutuante de torneio criativo com seis biomas estilizados
-STYLE: high-polish procedural Roblox, original, sem copiar assets oficiais de Minecraft, BedWars ou Creative Squad
+TARGET: visual upgrade for ages `10-14`
+BASELINE: `mobile fraco`
+STYLE: `quase Minecraft`, mas original; voxel-heavy, blocky, modular, sem copiar textura, sprite ou iconografia oficial
 
 ## VISUAL_PILLARS
-- SILHOUETTE_FIRST: cada bioma precisa ser reconhecivel por forma antes do texto.
-- READABLE_COMPETITION: decoracao nunca bloqueia spawn, nucleo, geradores, loja, rotas ou combate.
-- LAYERED_ISLANDS: nenhuma plataforma pode parecer uma placa retangular simples; usar base, borda, subestrutura e props.
-- CENTER_PREMIUM: centro deve parecer objetivo mais valioso por luz, altura, VFX e cor.
-- LOBBY_REVEAL: spawn inicial deve enquadrar a arena e vender o jogo em um screenshot.
+- `SilhouetteFirst`: cada bioma precisa ser reconhecivel pela massa antes do texto
+- `DepthBeforeGlow`: profundidade vem de strata, borda, sombra e material antes de neon
+- `HeroReadability`: totem, Ilha do Meio e Centro precisam dominar a leitura
+- `LobbyReveal`: o primeiro frame vende a arena, nao a sinalizacao
+- `LowTierSafe`: o tier `Low` e a versao canonica de desempenho
 
-## BIOME_LANGUAGE
-- Planicie: formas suaves, grama estilizada, flores, pedras claras, banners verdes.
-- Deserto: dunas em degraus, arenito, obeliscos, tochas quentes, paleta ambar.
-- Taiga: pinheiros low-poly, pedra fria, gelo escuro, nevoa azulada, silhueta vertical.
-- Selva: folhagem densa, cipós, troncos, plataformas organicas, verdes saturados.
-- Neve: gelo, cristais, neve acumulada, luz fria, bordas claras.
-- Cogumelos: cogumelos gigantes, chao roxo/vermelho, brilho magico, formas arredondadas.
+## MATERIAL_LANGUAGE
+- terreno: `Grass`, `Ground`, `Rock`, `Sand`, `Sandstone`, `Snow`, `Mud`, `Slate`
+- construcao: `WoodPlanks`, `Wood`, `Rock`
+- premium: `SmoothPlastic` so para contraste controlado
+- recompensa: `Neon` so para esmeralda/totem e nunca como base do look
 
-## REQUIRED_ELEMENTS_PER_BASE
-- island core platform with non-rectangular layered silhouette
-- visual rim and underside supports
-- integrated spawn pad
-- core pedestal with aura
-- iron and gold generator pads with labels and light
-- item shop and upgrade shop as distinct stands
-- tall biome landmark visible from center
-- at least 8 lightweight decorative props
-- clear visual route markers toward center/mid islands
+## BIOME_RULES
+- `Planicie`: terra e grama em degraus, flores voxel, cercas, abrigo simples
+- `Deserto`: dunas em blocos, arenito em terraços, ruina seca, cactos cubicos
+- `Taiga`: pedra fria, pinheiros em camadas, madeira escura, pilha de pedra
+- `Selva`: troncos altos, canopia densa, passarela de madeira, massa vegetal pesada
+- `Neve`: gelo e neve em placas, picos frios, contraste mais limpo
+- `Cogumelos`: mycelium, cogumelos blocados, recorte mais excentrico
+
+## QUALITY_TIER_RULES
+- `Low`: `ShadowMap`, sem `SunRays`, sem glow decorativo, luz/partícula só para leitura
+- `Standard`: `Future`, brilho moderado, shrine/centro mais ricos, mas mesma linguagem
+- nenhum asset visual pode existir sem categoria: `GameplayCritical`, `ReadabilitySupport`, `PureDecor`
 
 ## PROHIBITED
-- flat rectangular arenas as final shape
-- neon signs as primary art direction
-- identical geometry for all biomes
-- external logos, voices, slogans, thumbnails, brand colors or likeness
-- off-platform links or QR codes
-- decoration that changes competitive readability
-
-## ACCEPTANCE
-- first lobby screenshot looks intentional and publishable
-- six bases are distinguishable without reading labels
-- center reads as premium objective
-- UI and world communicate the objective without external explanation
+- copiar textura oficial de Minecraft
+- copiar sprite oficial de esmeralda
+- glow em superfícies grandes como linguagem principal
+- signage gigante dominando lobby ou centro
+- biomas diferenciados só por texto

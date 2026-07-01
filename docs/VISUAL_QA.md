@@ -1,39 +1,41 @@
 # AI_VISUAL_QA
 
 ## REQUIRED_SCREENSHOTS
-- lobby initial spawn
-- lobby arena overlook
-- Planicie base
-- Deserto base
-- Taiga base
-- Selva base
-- Neve base
-- Cogumelos base
-- center island
-- mid island
-- item shop modal
-- countdown
-- active HUD
-- core destroyed
-- victory or draw banner
+- lobby spawn
+- lobby reveal
+- preview base
+- Planicie
+- Deserto
+- Taiga
+- Selva
+- Neve
+- Cogumelos
+- Ilha do Meio
+- Centro
+- HUD `Lobby`
+- HUD `Active`
+
+## COMPARE_REQUIRED
+- `Low` vs `Standard`
+- `Lobby` before/after
+- `Neve` before/after
+- `Centro` before/after
+- `ShadowMap` vs `Future` only if `Standard` is under review
 
 ## PASS_CRITERIA
-- first screenshot does not look empty
-- first screenshot does not look cluttered by stacked floating labels
-- each biome is distinguishable by silhouette and palette
-- core, shops and generators are visible within 5 seconds after spawning at base
-- center is visually stronger than side islands
-- no debug-looking flat platforms dominate the scene
-- bloom and exposure do not wash out pads, stands or biome materials
-- no UI text is clipped
-- no important world object is hidden behind UI
-- no red errors in Studio Output for 5 minutes
+- o lobby nao parece vazio nem poluido por labels
+- o centro e legivel no primeiro frame
+- as Ilhas do Meio nao somem no horizonte
+- cada bioma e reconhecivel sem ler placa
+- o mapa parece mais proximo de Minecraft por massa, strata e material
+- o totem continua sendo o elemento mais importante da base
+- bloom nao apaga forma ou material
+- HUD continua legivel em viewport mobile
 
 ## FAIL_CONDITIONS
-- any base relies on text label as primary identity
-- giant floating labels overlap in the lobby or center frame
-- lobby spawn faces empty space
-- platforms look like unstyled rectangles
-- UI overlaps active combat controls or hides resources
-- visual props block routes, spawn, shops, generators or core
-- particle or light spam causes visible performance drop
+- glow maior que a leitura do terreno
+- billboard ou signage mais forte que landmark e rota
+- preview de base rouba a cena do reveal
+- ilha importante some contra o ceu
+- brilho premium existe em todo lugar e nao so em recompensa
+- `Low` perde clareza ou jogabilidade
