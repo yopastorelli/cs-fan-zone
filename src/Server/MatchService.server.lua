@@ -4,6 +4,7 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local VisualKit = require(Shared:WaitForChild("VisualKit"))
 
 local ArenaState = require(script.Parent:WaitForChild("ArenaState"))
 
@@ -15,10 +16,15 @@ local function updateCoreStatusVisual(corePart, text)
     end
 
     local plinth = corePart.Parent and corePart.Parent:FindFirstChild("CoreStatusPlinth")
-    local surfaceGui = plinth and plinth:FindFirstChild("SurfaceGui")
-    local surfaceLabel = surfaceGui and surfaceGui:FindFirstChild("TextLabel")
-    if surfaceLabel and surfaceLabel:IsA("TextLabel") then
-        surfaceLabel.Text = text
+    if plinth then
+        for _, child in ipairs(plinth:GetChildren()) do
+            if child:IsA("SurfaceGui") then
+                local surfaceLabel = child:FindFirstChild("TextLabel")
+                if surfaceLabel and surfaceLabel:IsA("TextLabel") then
+                    surfaceLabel.Text = text
+                end
+            end
+        end
     end
 end
 
@@ -37,7 +43,16 @@ local function clearRoundDebris()
             local team = ArenaState.Teams[teamId]
             descendant.Color = team and team.Color or Color3.fromRGB(255, 255, 255)
             descendant:SetAttribute("CoreHealth", Config.Match.MaxCoreHealth)
-            updateCoreStatusVisual(descendant, string.format("Nucleo %d/%d", Config.Match.MaxCoreHealth, Config.Match.MaxCoreHealth))
+            local parent = descendant.Parent
+            local totemFlag = parent and parent:FindFirstChild("TotemFlag")
+            if totemFlag and totemFlag:IsA("BasePart") and team then
+                totemFlag.Color = (VisualKit.Biomes[team.Id] and VisualKit.Biomes[team.Id].Secondary) or team.Color
+            end
+            local crest = parent and parent:FindFirstChild("TotemCrest")
+            if crest and crest:IsA("BasePart") and team then
+                crest.Color = (VisualKit.Biomes[team.Id] and VisualKit.Biomes[team.Id].Accent) or team.Color:Lerp(Color3.new(1, 1, 1), 0.12)
+            end
+            updateCoreStatusVisual(descendant, string.format("Totem %d/%d", Config.Match.MaxCoreHealth, Config.Match.MaxCoreHealth))
         end
     end
 end
@@ -49,13 +64,16 @@ local function clearInventories()
 end
 
 local function beginRound(players)
+    local roundToken = ArenaState.AdvanceRoundToken()
     clearRoundDebris()
     clearInventories()
     ArenaState.ResetRoundState()
     local assignedPlayers = ArenaState.AssignPlayersToTeams(players)
     ArenaState.SetMatchResult("Reset", nil)
     ArenaState.SetMatchState("Active", Config.Match.SuddenDeathSeconds)
-    ArenaState.PushAnnouncement("Rodada iniciada. Protejam o nucleo e avancem pelo centro.", "Accent")
+    local roundFormat = ArenaState.GetCurrentRoundFormat()
+    local formatDisplay = ArenaState.GetRoundFormatDisplay(roundFormat)
+    ArenaState.PushAnnouncement(string.format("Rodada %s iniciada. Ao nascer: pegue ferro, abra a loja e prepare a ponte para o Meio.", formatDisplay), "Accent")
 
     for _, player in ipairs(assignedPlayers) do
         ArenaState.ApplyRespawnLocation(player)
@@ -78,19 +96,22 @@ local function beginRound(players)
     end
 
     task.delay(Config.Match.SuddenDeathSeconds, function()
-        if ArenaState.MatchState ~= "Active" then
+        if ArenaState.GetRoundToken() ~= roundToken or ArenaState.MatchState ~= "Active" then
             return
         end
 
         ArenaState.SetMatchState("SuddenDeath", Config.Match.PostMatchSeconds)
         for teamId in pairs(ArenaState.Teams) do
-            ArenaState.DamageCore(teamId, Config.Match.MaxCoreHealth)
+            if ArenaState.IsTeamActive(teamId) then
+                ArenaState.DamageCore(teamId, Config.Match.MaxCoreHealth)
+            end
         end
-        ArenaState.PushAnnouncement("Morte Subita. Todos os nucleos foram destruidos.", "Danger")
+        ArenaState.PushAnnouncement("Morte Subita. Os totens ativos foram destruidos.", "Danger")
     end)
 end
 
 local function returnEveryoneToLobby()
+    ArenaState.AdvanceRoundToken()
     ArenaState.ResetRoundState()
     clearRoundDebris()
     clearInventories()
@@ -123,14 +144,7 @@ local function matchLoop()
                 ArenaState.SetMatchState("Waiting", 0)
                 ArenaState.PushAnnouncement("Contagem cancelada. Faltam jogadores.", "Warning")
             elseif secondsLeft <= 0 then
-                local selected = {}
-                for index, player in ipairs(eligible) do
-                    if index > Config.Match.MaxPlayers then
-                        break
-                    end
-                    selected[#selected + 1] = player
-                end
-                beginRound(selected)
+                beginRound(eligible)
             else
                 ArenaState.BroadcastMatchState()
             end
